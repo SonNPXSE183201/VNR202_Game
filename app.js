@@ -1174,15 +1174,7 @@ class AppController {
   }
 
   updatePlayerConnStatus(isConnected, text) {
-    const bar = document.getElementById('player-conn-status-bar');
-    const textEl = document.getElementById('player-conn-status-text');
-    if (!bar || !textEl) return;
-    if (isConnected) {
-      bar.classList.add('connected');
-    } else {
-      bar.classList.remove('connected');
-    }
-    textEl.textContent = text;
+    // Không hiển thị log trạng thái kết nối trên UI theo yêu cầu
   }
 
   sendPlayerJoinRequest() {
@@ -1325,8 +1317,8 @@ class AppController {
     if (logFeed) {
       logFeed.innerHTML = `
         <div class="log-empty-state">
-          <span class="material-symbols-outlined" style="font-size:36px;opacity:0.4;">radio</span>
-          <div>Đang kết nối tín hiệu... Nhật ký sẽ hiển thị khi các chiến sĩ trả lời câu hỏi!</div>
+          <span class="material-symbols-outlined" style="font-size:36px;opacity:0.4;">stars</span>
+          <div>Đang chờ sự kiện... Nhật ký sẽ hiển thị khi các chiến sĩ mở Rương bí ẩn & Cướp điểm!</div>
         </div>
       `;
     }
@@ -2152,7 +2144,6 @@ class AppController {
     this.savePlayerSession();
 
     this.switchView('view-player-waiting');
-    this.updatePlayerConnStatus(false, 'Đang gửi tín hiệu kết nối tới máy chiếu Host...');
   }
 
   handlePlayerIncomingMessage(msg) {
@@ -2174,7 +2165,6 @@ class AppController {
         clearInterval(this.playerJoinHeartbeat);
         this.playerJoinHeartbeat = null;
       }
-      this.updatePlayerConnStatus(true, '✅ Đã kết nối với máy chiếu Host! Sẵn sàng chiến đấu!');
     } else if (msg.type === 'HOST_LOBBY_BEACON') {
       // Nhận được tín hiệu beacon từ Host, gửi lại thông tin để chắc chắn Host đã lưu
       if (this.currentView === 'view-player-waiting') {
