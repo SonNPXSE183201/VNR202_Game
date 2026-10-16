@@ -169,18 +169,27 @@ const sound = new SoundEffects();
 // ============================================================
 class RealtimeSync {
   constructor(roomCode, isHost = false) {
-    this.roomCode = roomCode;
+    this.roomCode = String(roomCode).trim();
     this.isHost = isHost;
     this.mqttClient = null;
     this.listeners = [];
-    this.clientId = 'vnr202_' + (isHost ? 'host_' : 'ply_') + Math.random().toString(36).substring(2, 8);
+    this.outboxQueue = [];
+    this.isSubscribed = false;
+    this.clientId = 'vnr202_' + (isHost ? 'h_' : 'p_') + Math.random().toString(36).substring(2, 8);
+    this.brokerIndex = 0;
+    this.brokers = [
+      'wss://broker.emqx.io:8084/mqtt',
+      'wss://broker.hivemq.com:8884/mqtt'
+    ];
 
-    // Kênh đồng bộ nội bộ giữa các tab trên cùng máy (rất tốt khi thuyết trình viên test thử)
+    // Kênh đồng bộ nội bộ giữa các tab trên cùng máy
     if (typeof BroadcastChannel !== 'undefined') {
-      this.bc = new BroadcastChannel('vnr202_room_' + roomCode);
-      this.bc.onmessage = (event) => {
-        this.emitMessage(event.data);
-      };
+      try {
+        this.bc = new BroadcastChannel('vnr202_room_' + this.roomCode);
+        this.bc.onmessage = (event) => {
+          this.emitMessage(event.data);
+        };
+      } catch (e) { }
     }
 
     this.connectMqtt();
@@ -192,22 +201,31 @@ class RealtimeSync {
       return;
     }
 
-    // Kết nối đến WSS Broker công cộng miễn phí (EMQX với fallback HiveMQ)
-    const brokerUrl = 'wss://broker.emqx.io:8084/mqtt';
+    const brokerUrl = this.brokers[this.brokerIndex];
+    console.log(`[MQTT] Connecting to ${brokerUrl} (Room ${this.roomCode}, ${this.isHost ? 'Host' : 'Player'})...`);
+
     try {
       this.mqttClient = mqtt.connect(brokerUrl, {
         clientId: this.clientId,
         clean: true,
-        connectTimeout: 5000,
-        reconnectPeriod: 2500
+        connectTimeout: 6000,
+        reconnectPeriod: 2500,
+        keepalive: 30
       });
 
       this.mqttClient.on('connect', () => {
-        console.log(`[MQTT] Connected to room ${this.roomCode} as ${this.isHost ? 'Host' : 'Player'}`);
-        // Lắng nghe topic của phòng
+        console.log(`[MQTT] ✅ Connected to ${brokerUrl} as ${this.isHost ? 'Host' : 'Player'}`);
+        // Lắng nghe tất cả các tin nhắn trong phòng
         const topic = `vnr202/rooms/${this.roomCode}/#`;
-        this.mqttClient.subscribe(topic, (err) => {
-          if (err) console.error("[MQTT] Subscribe error:", err);
+        this.mqttClient.subscribe(topic, { qos: 0 }, (err) => {
+          if (err) {
+            console.error("[MQTT] Subscribe error:", err);
+            return;
+          }
+          this.isSubscribed = true;
+          console.log(`[MQTT] Subscribed to topic: ${topic}`);
+          // Xả ngay lập tức mọi tin nhắn đang xếp hàng chờ gửi!
+          this.flushOutbox();
         });
       });
 
@@ -223,10 +241,40 @@ class RealtimeSync {
       });
 
       this.mqttClient.on('error', (err) => {
-        console.warn("[MQTT] Connection warning:", err);
+        console.warn(`[MQTT] Connection warning on ${brokerUrl}:`, err);
+        this.tryNextBroker();
+      });
+
+      this.mqttClient.on('offline', () => {
+        this.isSubscribed = false;
       });
     } catch (e) {
       console.warn("[MQTT] Init exception:", e);
+      this.tryNextBroker();
+    }
+  }
+
+  tryNextBroker() {
+    if (this.isSubscribed || this.brokers.length <= 1) return;
+    this.isSubscribed = false;
+    if (this.mqttClient) {
+      try { this.mqttClient.end(true); } catch (e) { }
+    }
+    this.brokerIndex = (this.brokerIndex + 1) % this.brokers.length;
+    console.log(`[MQTT] Failover switching to: ${this.brokers[this.brokerIndex]}`);
+    setTimeout(() => this.connectMqtt(), 800);
+  }
+
+  flushOutbox() {
+    if (!this.mqttClient || !this.mqttClient.connected || !this.isSubscribed) return;
+    while (this.outboxQueue.length > 0) {
+      const payload = this.outboxQueue.shift();
+      const topic = `vnr202/rooms/${this.roomCode}/${this.isHost ? 'host' : 'player'}`;
+      try {
+        this.mqttClient.publish(topic, JSON.stringify(payload), { qos: 0 });
+      } catch (e) {
+        console.warn("[MQTT] Publish failed:", e);
+      }
     }
   }
 
@@ -243,21 +291,34 @@ class RealtimeSync {
   send(data) {
     const payload = { ...data, _sender: this.clientId, _time: Date.now() };
 
-    // Gửi qua BroadcastChannel
+    // Gửi qua BroadcastChannel (nội bộ tab trên cùng máy)
     if (this.bc) {
       try { this.bc.postMessage(payload); } catch (e) { }
     }
 
-    // Gửi qua MQTT Broker
-    if (this.mqttClient && this.mqttClient.connected) {
+    // Gửi qua MQTT Broker ra Internet
+    if (this.mqttClient && this.mqttClient.connected && this.isSubscribed) {
       const topic = `vnr202/rooms/${this.roomCode}/${this.isHost ? 'host' : 'player'}`;
-      this.mqttClient.publish(topic, JSON.stringify(payload), { qos: 0 });
+      try {
+        this.mqttClient.publish(topic, JSON.stringify(payload), { qos: 0 });
+      } catch (e) {
+        this.outboxQueue.push(payload);
+      }
+    } else {
+      // Đưa vào hàng đợi để gửi ngay khi vừa kết nối xong!
+      this.outboxQueue.push(payload);
     }
   }
 
   destroy() {
-    if (this.bc) this.bc.close();
-    if (this.mqttClient) this.mqttClient.end();
+    if (this.bc) {
+      try { this.bc.close(); } catch (e) { }
+    }
+    if (this.mqttClient) {
+      try { this.mqttClient.end(true); } catch (e) { }
+    }
+    this.isSubscribed = false;
+    this.outboxQueue = [];
   }
 }
 
@@ -495,6 +556,10 @@ class AppController {
     this.candyPickTimerInterval = null;
     this.candyPickTimerRemaining = 100; // 10 giây (100 ticks x 100ms)
     this.roomCompetitors = [];
+
+    // Bộ định thời heartbeat đồng bộ mạng giữa Host & Player
+    this.playerJoinHeartbeat = null;
+    this.hostLobbySyncInterval = null;
 
     this.initDom();
     this.checkUrlParams();
@@ -1108,10 +1173,38 @@ class AppController {
     this.switchView('view-role-select');
   }
 
+  updatePlayerConnStatus(isConnected, text) {
+    const bar = document.getElementById('player-conn-status-bar');
+    const textEl = document.getElementById('player-conn-status-text');
+    if (!bar || !textEl) return;
+    if (isConnected) {
+      bar.classList.add('connected');
+    } else {
+      bar.classList.remove('connected');
+    }
+    textEl.textContent = text;
+  }
+
+  sendPlayerJoinRequest() {
+    if (!this.sync || !this.playerRoomCode) return;
+    this.sync.send({
+      type: 'PLAYER_JOIN',
+      player: {
+        id: this.playerId,
+        name: this.playerName,
+        avatar: this.playerAvatar
+      }
+    });
+  }
+
   cleanup() {
     clearInterval(this.hostTimerInterval);
     clearInterval(this.playerTimerInterval);
     clearInterval(this.botInterval);
+    clearInterval(this.playerJoinHeartbeat);
+    clearInterval(this.hostLobbySyncInterval);
+    this.playerJoinHeartbeat = null;
+    this.hostLobbySyncInterval = null;
     this.hostIsRunning = false;
     if (this.sync) {
       this.sync.destroy();
@@ -1265,6 +1358,22 @@ class AppController {
     // Kết nối Realtime
     this.sync = new RealtimeSync(this.hostRoomCode, true);
     this.sync.onMessage((msg) => this.handleHostIncomingMessage(msg));
+
+    // Phát beacon định kỳ mỗi 2.5s để người chơi mới vào nhận diện ngay
+    if (this.hostLobbySyncInterval) clearInterval(this.hostLobbySyncInterval);
+    this.hostLobbySyncInterval = setInterval(() => {
+      if (this.currentView !== 'view-host-lobby') {
+        clearInterval(this.hostLobbySyncInterval);
+        this.hostLobbySyncInterval = null;
+        return;
+      }
+      if (this.sync) {
+        this.sync.send({
+          type: 'HOST_LOBBY_BEACON',
+          roomCode: this.hostRoomCode
+        });
+      }
+    }, 2500);
 
     this.switchView('view-host-lobby');
   }
@@ -2024,14 +2133,18 @@ class AppController {
     }
 
     // Bắn tin nhắn xin tham gia đến Host
-    this.sync.send({
-      type: 'PLAYER_JOIN',
-      player: {
-        id: this.playerId,
-        name: this.playerName,
-        avatar: this.playerAvatar
+    this.sendPlayerJoinRequest();
+
+    // Bắt đầu heartbeat gửi lại liên tục mỗi 1.2s cho đến khi Host xác nhận đã thấy người chơi
+    if (this.playerJoinHeartbeat) clearInterval(this.playerJoinHeartbeat);
+    this.playerJoinHeartbeat = setInterval(() => {
+      if (this.currentView !== 'view-player-waiting') {
+        clearInterval(this.playerJoinHeartbeat);
+        this.playerJoinHeartbeat = null;
+        return;
       }
-    });
+      this.sendPlayerJoinRequest();
+    }, 1200);
 
     try {
       window.history.replaceState(null, '', `?room=${pin}`);
@@ -2039,10 +2152,12 @@ class AppController {
     this.savePlayerSession();
 
     this.switchView('view-player-waiting');
+    this.updatePlayerConnStatus(false, 'Đang gửi tín hiệu kết nối tới máy chiếu Host...');
   }
 
   handlePlayerIncomingMessage(msg) {
     if (msg.type === 'PLAYER_JOIN_REJECTED' && msg.playerId === this.playerId) {
+      if (this.playerJoinHeartbeat) clearInterval(this.playerJoinHeartbeat);
       sound.wrong();
       alert(msg.reason || `Tên "${this.playerName}" đã có người trong phòng sử dụng!\nVui lòng đổi tên khác.`);
       this.cleanup();
@@ -2053,6 +2168,18 @@ class AppController {
         nameInput.select();
       }
       return;
+    } else if (msg.type === 'PLAYER_JOIN_ACCEPTED' && msg.playerId === this.playerId) {
+      // Máy chiếu Host đã xác nhận và thấy người chơi trên màn hình
+      if (this.playerJoinHeartbeat) {
+        clearInterval(this.playerJoinHeartbeat);
+        this.playerJoinHeartbeat = null;
+      }
+      this.updatePlayerConnStatus(true, '✅ Đã kết nối với máy chiếu Host! Sẵn sàng chiến đấu!');
+    } else if (msg.type === 'HOST_LOBBY_BEACON') {
+      // Nhận được tín hiệu beacon từ Host, gửi lại thông tin để chắc chắn Host đã lưu
+      if (this.currentView === 'view-player-waiting') {
+        this.sendPlayerJoinRequest();
+      }
     } else if (msg.type === 'ROOM_LEADERBOARD_SYNC') {
       if (Array.isArray(msg.players)) {
         this.roomCompetitors = msg.players;
@@ -2060,6 +2187,7 @@ class AppController {
     } else if (msg.type === 'CANDY_STEAL_NOTICE' && msg.victimId === this.playerId) {
       this.showVictimRobbedAlert(msg.stealerName, msg.stolenPoints);
     } else if (msg.type === 'GAME_START') {
+      if (this.playerJoinHeartbeat) clearInterval(this.playerJoinHeartbeat);
       this.startPlayerGame(msg.duration);
     } else if (msg.type === 'GAME_END') {
       this.endPlayerGame();

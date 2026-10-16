@@ -19,6 +19,11 @@
   <!-- External Libraries: QRCode, MQTT WebSockets, Canvas Confetti -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.5.0/mqtt.min.js"></script>
+  <script>
+    if (typeof mqtt === 'undefined') {
+      document.write('<script src="https://unpkg.com/mqtt@5.5.0/dist/mqtt.min.js"><\/script>');
+    }
+  </script>
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
 </head>
 
@@ -173,6 +178,12 @@
           </p>
           <div class="hero-badge" style="margin-top:6px;">
             Phòng thi đấu: <strong id="display-waiting-room" style="margin-left:4px;letter-spacing:1px;">...</strong>
+          </div>
+
+          <!-- Trạng thái kết nối thời gian thực với máy chiếu Host -->
+          <div class="player-conn-status-bar" id="player-conn-status-bar">
+            <span class="conn-pulse-dot" id="player-conn-dot"></span>
+            <span id="player-conn-status-text">Đang gửi tín hiệu kết nối tới máy chiếu Host...</span>
           </div>
 
         </div>
