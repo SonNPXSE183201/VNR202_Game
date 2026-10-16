@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <title>E2E Visual Test - VNR202</title>
+  <style>
+    body { margin: 0; padding: 0; background: #0E0E12; color: #fff; font-family: sans-serif; }
+    iframe { width: 100vw; height: 100vh; border: none; }
+  </style>
+</head>
+<body>
+  <iframe id="game-frame" src="index.html"></iframe>
+
+  <script>
+    const frame = document.getElementById('game-frame');
+
+    frame.addEventListener('load', async () => {
+      const win = frame.contentWindow;
+      const app = win.app;
+      const urlParams = new URLSearchParams(window.location.search);
+      const step = urlParams.get('step') || 'home';
+
+      console.log("[E2E] Running step:", step);
+
+      if (step === 'candy_timer') {
+        // Chuyển sang màn hình thi đấu của người chơi và mở Candy Quest
+        app.playerName = "Chiến Sĩ Quyết Thắng";
+        app.playerScore = 7500;
+        app.switchView('view-player-game');
+        app.triggerCandyQuest();
+      } else if (step === 'candy_timeout') {
+        // Chuyển sang màn hình thi đấu và kích hoạt hết giờ 10s
+        app.playerName = "Chiến Sĩ Quyết Thắng";
+        app.playerScore = 7500;
+        app.switchView('view-player-game');
+        app.triggerCandyQuest();
+        // Gọi timeout ngay
+        app.handleCandyQuestTimeout();
+      } else if (step === 'host_podium') {
+        // Chuyển sang màn hình Bảng Vàng vinh danh Top 3
+        app.hostPlayers = {
+          'p1': { id: 'p1', name: 'Nguyễn Văn Nhất', score: 28500, avatar: '🦁' },
+          'p2': { id: 'p2', name: 'Trần Thị Nhì', score: 21000, avatar: '🐯' },
+          'p3': { id: 'p3', name: 'Lê Văn Ba', score: 16500, avatar: '🦅' },
+          'p4': { id: 'p4', name: 'Phạm Văn Bốn', score: 9000, avatar: '🐺' }
+        };
+        app.renderHostPodium();
+        app.switchView('view-host-podium');
+      } else if (step === 'session_recovery') {
+        // Giả lập khôi phục phiên người chơi sau khi F5
+        const sessionState = {
+          role: 'player',
+          id: 'test_p_1',
+          name: 'Đồng Chí Khôi Phục',
+          avatar: '⚡',
+          roomCode: '194599',
+          score: 15400,
+          streak: 3,
+          correctCount: 6,
+          answeredCount: 7,
+          currentQIndex: 6,
+          timerRemaining: 215,
+          view: 'view-player-game'
+        };
+        app.restorePlayerSession(sessionState);
+      }
+
+      document.title = "READY_" + step;
+    });
+  </script>
+</body>
+</html>

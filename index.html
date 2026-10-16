@@ -1,0 +1,728 @@
+<!DOCTYPE html>
+<html lang="vi">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Đấu Trường Lịch Sử VNR202 (1945 - 1950) | Trò Chơi Thuyết Trình</title>
+
+  <!-- Google Fonts: Be Vietnam Pro & Material Symbols -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link
+    href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400&family=Material+Symbols+Outlined:opsz,wght,FILL,GRAD@24,400,0,0&display=swap"
+    rel="stylesheet">
+
+  <!-- Stylesheet Material Design 3 -->
+  <link rel="stylesheet" href="style.css">
+
+  <!-- External Libraries: QRCode, MQTT WebSockets, Canvas Confetti -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/mqtt/5.5.0/mqtt.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+</head>
+
+<body>
+
+  <!-- Canvas Pháo Hoa Chúc Mừng -->
+  <canvas id="confetti-canvas"
+    style="position:fixed;top:0;left:0;width:100%;height:100%;pointer-events:none;z-index:9999;"></canvas>
+
+  <!-- App Header (Material 3 Top App Bar) -->
+  <header class="app-header">
+    <a href="#" class="brand" id="brand-home-btn">
+      <div class="brand-icon">★</div>
+      <div class="brand-text">
+        <h1>VNR202 <span class="brand-badge">Lịch Sử Đảng</span></h1>
+        <div class="brand-sub">Đấu Trường Kháng Chiến Kiến Quốc (1945 - 1950)</div>
+      </div>
+    </a>
+    <div class="header-actions">
+      <button class="btn btn-tonal btn-icon" id="audio-toggle-btn" title="Bật/Tắt âm thanh">
+        <span class="material-symbols-outlined" id="audio-icon">volume_up</span>
+      </button>
+      <button class="btn btn-outlined btn-sm" id="header-home-btn">
+        <span class="material-symbols-outlined" style="font-size:18px;">home</span>
+        Trang chủ
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Content Container -->
+  <main class="main-content">
+
+    <!-- ========================================================
+         VIEW 1: CHỌN VAI TRÒ (ROLE SELECT)
+         ======================================================== -->
+    <section id="view-role-select" class="view-panel">
+      <div class="entry-card">
+        <div class="hero-badge">
+          <span class="material-symbols-outlined" style="font-size:16px;">military_tech</span>
+          GIAI ĐOẠN 1945 - 1950: NGÀN CÂN TREO SỢI TÓC
+        </div>
+        <h2 class="entry-title">ĐẤU TRƯỜNG QUYẾT SÁCH LỊCH SỬ</h2>
+        <p class="entry-desc">
+          Chào mừng thầy cô và các bạn sinh viên đến với trò chơi tương tác thuyết trình. Trả lời đúng, tích lũy điểm
+          số, cạnh tranh bục vinh danh với 3 Giải Nhất - Nhì - Ba!
+        </p>
+
+        <div class="role-grid">
+          <!-- Người chơi -->
+          <div class="role-card" id="btn-select-player">
+            <div class="role-icon player-icon">
+              <span class="material-symbols-outlined">smartphone</span>
+            </div>
+            <div class="role-name">Chiến Sĩ Tranh Tài</div>
+            <div class="role-info">Dành cho sinh viên tham gia thi đấu bằng Điện thoại hoặc Laptop cá nhân.</div>
+            <button class="btn btn-filled" style="width:100%;">
+              <span class="material-symbols-outlined">login</span>
+              Tham gia ngay
+            </button>
+          </div>
+
+          <!-- Ban Tổ Chức / Máy Chiếu -->
+          <div class="role-card" id="btn-select-host">
+            <div class="role-icon host-icon">
+              <span class="material-symbols-outlined">cast_for_education</span>
+            </div>
+            <div class="role-name">Ban Chỉ Huy (Máy Chiếu)</div>
+            <div class="role-info">Dành cho nhóm thuyết trình chiếu mã QR và Bảng vàng trực tiếp lên màn hình lớp.</div>
+            <button class="btn btn-secondary" style="width:100%;">
+              <span class="material-symbols-outlined">tv</span>
+              Tạo phòng chiếu
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 2: SINH VIÊN NHẬP THÔNG TIN (PLAYER JOIN)
+         ======================================================== -->
+    <section id="view-player-join" class="view-panel" style="display:none;">
+      <div class="player-container">
+        <div class="join-form-card">
+          <div style="text-align:center;">
+            <div class="hero-badge">
+              <span class="material-symbols-outlined" style="font-size:16px;">badge</span>
+              ĐĂNG KÝ XUẤT QUÂN
+            </div>
+            <h2 style="font-size:1.6rem;font-weight:800;color:#FFF;margin-bottom:6px;">Nhập Thông Tin Cá Nhân</h2>
+            <p style="font-size:0.88rem;color:var(--md-sys-color-on-surface-variant);">
+              Vui lòng nhập Họ tên (hoặc Biệt danh) để Ban Tổ Chức vinh danh trao 3 Giải Nhất - Nhì - Ba!
+            </p>
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Mã Phòng:</label>
+            <input type="text" id="player-room-pin-input" class="m3-input" placeholder="Nhập 6 số phòng từ máy chiếu"
+              maxlength="6" inputmode="numeric">
+          </div>
+
+          <div class="form-group">
+            <label class="form-label">Tên của bạn (hoặc Biệt danh):</label>
+            <input type="text" id="player-name-input" class="m3-input" placeholder="Ví dụ: Nguyễn Văn A" maxlength="25">
+          </div>
+
+          <!-- Chọn Avatar Linh Vật Blooket -->
+          <div class="form-group">
+            <label class="form-label" style="display:flex;justify-content:space-between;align-items:center;">
+              <span>Chọn Linh Vật đại diện:</span>
+              <span class="selected-avatar-badge" id="join-avatar-preview-badge">
+                <span id="join-avatar-preview-icon">🦁</span>
+                <span id="join-avatar-preview-name">Sư Tử</span>
+              </span>
+            </label>
+            <div class="avatar-picker-scroll-grid" id="join-avatar-grid">
+              <!-- Render 32 avatars dynamically -->
+            </div>
+          </div>
+
+          <button class="btn btn-filled btn-lg" id="btn-player-submit-join" style="width:100%;margin-top:8px;">
+            <span class="material-symbols-outlined">swords</span>
+            VÀO CHIẾN TRƯỜNG
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 3: PHÒNG CHỜ CỦA SINH VIÊN (PLAYER WAITING LOBBY)
+         ======================================================== -->
+    <section id="view-player-waiting" class="view-panel" style="display:none;">
+      <div class="player-container">
+        <div class="player-waiting-card">
+
+          <!-- Avatar Hero phong cách Blooket (bấm vào để đổi linh vật bất kỳ lúc nào) -->
+          <div class="blooket-avatar-hero-box" id="btn-toggle-waiting-avatar-modal" title="Bấm vào để đổi linh vật">
+            <div class="avatar-hero-icon" id="display-player-avatar">🦁</div>
+            <div class="avatar-change-hint">
+              <span class="material-symbols-outlined" style="font-size:15px;">edit</span>
+              Đổi Linh Vật
+            </div>
+          </div>
+
+          <h2 style="font-size:1.6rem;font-weight:900;color:#FFF;margin-top:4px;">Bạn Đã Sẵn Sàng!</h2>
+          <div
+            style="background:var(--md-sys-color-surface-container-high);padding:10px 24px;border-radius:var(--radius-full);border:1px solid var(--md-sys-color-outline-variant);">
+            <strong id="display-player-name" style="color:var(--gold-color);font-size:1.15rem;">...</strong>
+          </div>
+
+          <p style="font-size:0.92rem;color:var(--md-sys-color-on-surface-variant);max-width:380px;">
+            Hãy ngước nhìn lên máy chiếu giảng đường. Trận đấu tự do sẽ bắt đầu ngay khi Ban Chỉ Huy phát lệnh!
+          </p>
+          <div class="hero-badge" style="margin-top:6px;">
+            Phòng thi đấu: <strong id="display-waiting-room" style="margin-left:4px;letter-spacing:1px;">...</strong>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 4: MÀN HÌNH THI ĐẤU CỦA SINH VIÊN (PLAYER GAMEPLAY)
+         ======================================================== -->
+    <section id="view-player-game" class="view-panel" style="display:none;">
+      <div class="player-container">
+        <div class="game-play-card" style="position:relative;">
+
+          <!-- Thanh trạng thái người chơi -->
+          <div class="player-status-bar">
+            <div>
+              <span style="font-size:0.8rem;color:var(--md-sys-color-on-surface-variant);">Điểm:</span>
+              <span class="player-score-chip" id="game-player-score">0</span>
+            </div>
+            <div class="player-streak-badge" id="game-player-streak-badge">
+              <span class="material-symbols-outlined" style="font-size:18px;">local_fire_department</span>
+              <span id="game-player-streak-count">Streak x0</span>
+            </div>
+            <div>
+              <span class="material-symbols-outlined"
+                style="font-size:16px;vertical-align:middle;color:var(--md-sys-color-secondary);">timer</span>
+              <span id="game-player-timer" style="font-weight:700;font-family:monospace;">00:00</span>
+            </div>
+          </div>
+
+          <!-- Card câu hỏi -->
+          <div class="question-box">
+            <div class="question-number-tag" id="game-question-tag">CÂU HỎI NGẪU NHIÊN</div>
+            <div class="question-text" id="game-question-content">Đang tải câu hỏi...</div>
+          </div>
+
+          <!-- 4 Nút đáp án tương tác cảm ứng nhạy -->
+          <div class="answers-grid">
+            <button class="answer-btn ans-0" data-index="0">
+              <span class="ans-letter">A</span>
+              <span class="ans-text" id="ans-text-0">Đáp án A</span>
+            </button>
+            <button class="answer-btn ans-1" data-index="1">
+              <span class="ans-letter">B</span>
+              <span class="ans-text" id="ans-text-1">Đáp án B</span>
+            </button>
+            <button class="answer-btn ans-2" data-index="2">
+              <span class="ans-letter">C</span>
+              <span class="ans-text" id="ans-text-2">Đáp án C</span>
+            </button>
+            <button class="answer-btn ans-3" data-index="3">
+              <span class="ans-letter">D</span>
+              <span class="ans-text" id="ans-text-3">Đáp án D</span>
+            </button>
+          </div>
+
+          <!-- Overlay phản hồi tức thì sau khi bấm -->
+          <div class="feedback-overlay" id="answer-feedback-overlay" style="display:none;">
+            <div class="feedback-icon" id="feedback-icon-elem">✅</div>
+            <div class="feedback-title" id="feedback-title-elem">CHÍNH XÁC!</div>
+            <div class="feedback-score-gain" id="feedback-gain-elem">+1,200 ĐIỂM</div>
+            <div class="feedback-explain" id="feedback-explain-elem">Giải thích lịch sử...</div>
+          </div>
+
+          <!-- ========================================================
+               CANDY QUEST: 3 RƯƠNG BÍ ẨN PHONG CÁCH BLOOKET
+               ======================================================== -->
+          <div class="candy-quest-overlay" id="candy-quest-overlay" style="display:none;">
+            <!-- Header Candy Quest -->
+            <div class="candy-header-box">
+              <div class="candy-mode-badge">
+                <span class="material-symbols-outlined" style="font-size:18px;">stars</span>
+                <span>CANDY QUEST • RƯƠNG BÍ ẨN</span>
+              </div>
+              
+              <!-- Đồng hồ đếm ngược 10s chọn rương -->
+              <div class="candy-pick-timer-badge" id="candy-pick-timer-badge">
+                <span class="material-symbols-outlined candy-timer-icon" id="candy-pick-timer-icon">alarm</span>
+                <span id="candy-pick-timer-text">Thời gian chọn: <strong id="candy-pick-timer-sec">10s</strong></span>
+              </div>
+              <div class="candy-timer-bar-wrap" id="candy-timer-bar-wrap">
+                <div class="candy-timer-bar-fill" id="candy-timer-bar-fill" style="width: 100%;"></div>
+              </div>
+
+              <h3 class="candy-title-main" id="candy-title-main">CHỌN 1 TRONG 3 RƯƠNG KHO BÁU!</h3>
+              <p class="candy-subtitle" id="candy-subtitle">Mỗi rương ẩn chứa may mắn bùng nổ hoặc hiểm họa bất ngờ!</p>
+            </div>
+
+            <!-- Khung 3 Rương Kho Báu 3D -->
+            <div class="candy-chests-row" id="candy-chests-row">
+              <!-- Rương 1 -->
+              <div class="candy-chest-box" data-chest-index="0" id="candy-chest-0">
+                <div class="chest-box-closed">
+                  <div class="chest-glow-ring"></div>
+                  <div class="chest-3d-graphic">
+                    <span class="chest-emoji">🎁</span>
+                    <span class="chest-lock">🔒</span>
+                  </div>
+                  <div class="chest-title-tag">RƯƠNG 1</div>
+                  <div class="chest-hint-tap">Chạm để mở</div>
+                </div>
+                <div class="chest-box-opened" id="chest-opened-0">
+                  <div class="opened-reward-icon" id="chest-icon-0">💎</div>
+                  <div class="opened-reward-title" id="chest-title-0">+2,500 ĐIỂM</div>
+                  <div class="opened-reward-sub" id="chest-sub-0">Túi kim cương lớn</div>
+                  <div class="chest-status-tag" id="chest-status-0">ĐÃ CHỌN</div>
+                </div>
+              </div>
+
+              <!-- Rương 2 -->
+              <div class="candy-chest-box" data-chest-index="1" id="candy-chest-1">
+                <div class="chest-box-closed">
+                  <div class="chest-glow-ring"></div>
+                  <div class="chest-3d-graphic">
+                    <span class="chest-emoji">🎁</span>
+                    <span class="chest-lock">🔒</span>
+                  </div>
+                  <div class="chest-title-tag">RƯƠNG 2</div>
+                  <div class="chest-hint-tap">Chạm để mở</div>
+                </div>
+                <div class="chest-box-opened" id="chest-opened-1">
+                  <div class="opened-reward-icon" id="chest-icon-1">🔥</div>
+                  <div class="opened-reward-title" id="chest-title-1">x2 GẤP ĐÔI</div>
+                  <div class="opened-reward-sub" id="chest-sub-1">Nhân đôi tổng điểm!</div>
+                  <div class="chest-status-tag" id="chest-status-1">ĐÃ CHỌN</div>
+                </div>
+              </div>
+
+              <!-- Rương 3 -->
+              <div class="candy-chest-box" data-chest-index="2" id="candy-chest-2">
+                <div class="chest-box-closed">
+                  <div class="chest-glow-ring"></div>
+                  <div class="chest-3d-graphic">
+                    <span class="chest-emoji">🎁</span>
+                    <span class="chest-lock">🔒</span>
+                  </div>
+                  <div class="chest-title-tag">RƯƠNG 3</div>
+                  <div class="chest-hint-tap">Chạm để mở</div>
+                </div>
+                <div class="chest-box-opened" id="chest-opened-2">
+                  <div class="opened-reward-icon" id="chest-icon-2">⚔️</div>
+                  <div class="opened-reward-title" id="chest-title-2">CƯỚP 25%</div>
+                  <div class="opened-reward-sub" id="chest-sub-2">Cướp điểm đối thủ!</div>
+                  <div class="chest-status-tag" id="chest-status-2">ĐÃ CHỌN</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Khung Chọn Mục Tiêu Cướp Điểm (Hiển thị khi trúng thẻ Cướp) -->
+            <div class="candy-steal-container" id="candy-steal-container" style="display:none;">
+              <div class="steal-alert-header">
+                <div class="steal-icon-pulse">⚔️</div>
+                <div class="steal-heading-text">
+                  <h4>CHỌN ĐỐI THỦ ĐỂ CƯỚP ĐIỂM!</h4>
+                  <p id="candy-steal-desc">Hãy chọn 1 chiến sĩ trong lớp để cướp điểm:</p>
+                </div>
+              </div>
+              <div class="steal-targets-list" id="candy-steal-targets-list">
+                <!-- Render động các đối thủ -->
+              </div>
+            </div>
+
+            <!-- Thông báo kết quả sau khi chọn rương -->
+            <div class="candy-outcome-toast" id="candy-outcome-toast" style="display:none;">
+              <div class="outcome-icon" id="candy-outcome-icon">✨</div>
+              <div class="outcome-text-box">
+                <div class="outcome-title" id="candy-outcome-title">CHÚC MỪNG!</div>
+                <div class="outcome-desc" id="candy-outcome-desc">Bạn vừa nhận được +2,500 điểm!</div>
+              </div>
+            </div>
+
+            <!-- Nút tiếp tục câu hỏi tiếp theo -->
+            <div class="candy-next-bar" id="candy-next-bar" style="display:none;">
+              <button class="btn btn-filled btn-lg candy-continue-btn" id="btn-candy-continue">
+                <span>TIẾP TỤC CÂU TIẾP THEO</span>
+                <span class="material-symbols-outlined">arrow_forward</span>
+              </button>
+              <div class="candy-auto-timer" id="candy-auto-timer">Tự động chuyển sau 3s...</div>
+            </div>
+          </div>
+
+          <!-- Toast Cảnh Báo Bị Cướp Điểm (Hiển thị khi bị người khác cướp) -->
+          <div class="player-victim-alert" id="player-victim-alert" style="display:none;">
+            <div class="victim-alert-icon">⚠️</div>
+            <div class="victim-alert-content">
+              <strong id="victim-alert-title">BỊ CƯỚP ĐIỂM!</strong>
+              <span id="victim-alert-msg">Bạn vừa bị đối thủ cướp điểm!</span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 5: KẾT THÚC BÀI THI CỦA SINH VIÊN (PLAYER FINISHED)
+         ======================================================== -->
+    <section id="view-player-finished" class="view-panel" style="display:none;">
+      <div class="player-container">
+        <div class="player-waiting-card">
+          <div style="font-size:56px;">🎖️</div>
+          <h2 style="font-size:1.8rem;font-weight:900;color:var(--gold-color);">HẾT GIỜ THI ĐẤU!</h2>
+          <p style="font-size:0.95rem;color:var(--md-sys-color-on-surface-variant);">
+            Bạn đã hoàn thành xuất sắc đợt sát hạch Lịch sử VNR202!
+          </p>
+
+          <div
+            style="background:var(--md-sys-color-surface-container-high);border-radius:var(--radius-l);padding:18px 30px;width:100%;max-width:320px;border:1px solid var(--md-sys-color-outline-variant);">
+            <div style="font-size:0.85rem;color:var(--md-sys-color-on-surface-variant);margin-bottom:4px;">Tổng điểm
+              tích lũy:</div>
+            <div id="final-player-score"
+              style="font-size:2.2rem;font-weight:900;color:var(--gold-color);font-family:monospace;">0</div>
+            <div style="margin-top:8px;font-size:0.85rem;color:#81C784;">
+              Đã trả lời đúng: <strong id="final-player-correct-count">0</strong> câu
+            </div>
+          </div>
+
+          <p style="font-size:0.92rem;color:#FFDF9E;margin-top:8px;">
+            👉 Hãy nhìn lên máy chiếu giảng đường để theo dõi <strong>Bục vinh danh Top 3 Giải Nhất - Nhì - Ba!</strong>
+          </p>
+
+          <div style="margin-top:16px;">
+            <button class="btn btn-tonal" id="btn-player-go-home">
+              <span class="material-symbols-outlined">home</span>
+              Về Trang Chủ
+            </button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 6: MÀN HÌNH SẢNH CHỜ HOST MÁY CHIẾU (HOST LOBBY BLOOKET STYLE)
+         ======================================================== -->
+    <section id="view-host-lobby" class="view-panel" style="display:none;">
+      <div class="blooket-lobby-wrapper">
+
+        <!-- BLOOKET TOP BANNER (THANH TIÊU ĐỀ TRÊN CÙNG: QR CODE + MÃ PHÒNG KHỔNG LỒ) -->
+        <header class="blooket-top-banner">
+
+          <!-- Bên trái: Mã QR Code + Hướng dẫn truy cập -->
+          <div class="blooket-banner-left">
+            <div class="blooket-qr-frame" id="host-qr-container">
+              <!-- QRCode Rendered here -->
+            </div>
+            <div class="blooket-join-guide">
+              <div class="guide-title">QUÉT MÃ QR BẰNG CAMERA</div>
+              <div class="guide-sub">hoặc dùng trình duyệt truy cập:</div>
+              <div class="guide-url-pill" id="host-join-url-text">play.vnr202.edu</div>
+            </div>
+          </div>
+
+          <!-- Ở giữa: MÃ PHÒNG (ROOM PIN) CỰC ĐẠI NỔI BẬT -->
+          <div class="blooket-banner-center">
+            <div class="blooket-pin-subtitle">MÃ PHÒNG</div>
+            <div class="blooket-pin-giant" id="host-room-pin-text">194564</div>
+          </div>
+
+          <!-- Bên phải: Sao chép link & Chọn thời gian thi đấu -->
+          <div class="blooket-banner-right">
+            <button class="btn btn-tonal btn-sm" id="btn-copy-join-link" title="Sao chép đường link phòng cho lớp">
+              <span class="material-symbols-outlined" style="font-size:18px;">content_copy</span>
+              <span>Copy Link</span>
+            </button>
+
+            <div class="blooket-timer-control">
+              <span class="material-symbols-outlined"
+                style="font-size:18px;color:var(--gold-color);">hourglass_top</span>
+              <select id="host-timer-select" class="m3-select-compact">
+                <option value="180">3 Phút (Thử nhanh)</option>
+                <option value="300" selected>5 Phút (Chuẩn)</option>
+                <option value="420">7 Phút (Thoải mái)</option>
+                <option value="600">10 Phút (Sát hạch)</option>
+              </select>
+            </div>
+          </div>
+
+        </header>
+
+        <!-- SÂN KHẤU CHÍNH BLOOKET (BLOOKET LOBBY STAGE: TOÀN BỘ MÀN HÌNH MỞ RỘNG) -->
+        <main class="blooket-lobby-stage">
+
+          <!-- Thanh điều khiển trên sân sảnh chờ -->
+          <div class="blooket-stage-bar">
+
+            <!-- Đếm số chiến sĩ tham gia -->
+            <div class="blooket-count-pill" id="host-lobby-player-count">
+              <span class="count-num" id="host-lobby-player-count-num">0</span>
+              <span class="material-symbols-outlined count-icon">group</span>
+              <span class="count-text">chiến sĩ</span>
+            </div>
+
+            <!-- Logo thương hiệu môn học Blooket phong cách VNR202 -->
+            <div class="blooket-center-brand">
+              <span class="brand-star">★</span>
+              <span class="brand-title">ĐẤU TRƯỜNG VNR202</span>
+              <span class="brand-star">★</span>
+            </div>
+
+            <!-- Nhóm nút hành động của Host -->
+            <div class="blooket-stage-actions">
+              <button class="btn btn-tonal" id="btn-host-add-bots"
+                title="Thêm 30 sinh viên giả lập để mô phỏng cả lớp thi đấu">
+                <span class="material-symbols-outlined">smart_toy</span>
+                Thêm 30 Bot Test
+              </button>
+
+              <button class="btn btn-secondary btn-lg blooket-big-start-btn" id="btn-host-start-game">
+                <span class="material-symbols-outlined" style="font-size:26px;">play_arrow</span>
+                BẮT ĐẦU TRẬN ĐẤU
+              </button>
+            </div>
+
+          </div>
+
+          <!-- SÂN HIỂN THỊ CÁC THẺ CHIẾN SĨ (KHÔNG GIAN RỘNG TOÀN DIỆN, KHÔNG BỊ BÓ HẸP) -->
+          <div class="blooket-arena-grid" id="host-lobby-players-grid">
+            <div class="blooket-empty-arena">
+              <div class="empty-icon-pulse">
+                <span class="material-symbols-outlined"
+                  style="font-size:64px;color:var(--md-sys-color-primary);">groups</span>
+              </div>
+              <div class="empty-text-title">Đang Chờ Chiến Sĩ Gia Nhập...</div>
+              <div class="empty-text-sub">Hãy quét mã QR trên màn hình hoặc truy cập đường link để bắt đầu!</div>
+            </div>
+          </div>
+
+        </main>
+
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 7: MÀN HÌNH ĐẤU TRƯỜNG THỜI GIAN THỰC (HOST LIVE LEADERBOARD)
+         ======================================================== -->
+    <section id="view-host-live" class="view-panel" style="display:none;">
+      <div class="host-container">
+        <div class="live-stadium-card">
+
+          <div class="live-stadium-header">
+            <div class="stadium-info">
+              <h2>
+                <span class="material-symbols-outlined"
+                  style="color:var(--md-sys-color-primary);font-size:32px;">swords</span>
+                BẢNG VÀNG THỜI GIAN THỰC
+              </h2>
+              <div class="stadium-meta">Đấu trường tự do (Blooket-Style) - Sinh viên tự làm câu hỏi trên thiết bị cá
+                nhân</div>
+            </div>
+
+            <div style="display:flex;align-items:center;gap:18px;">
+              <!-- Đồng hồ đếm ngược trận đấu -->
+              <div class="stadium-timer-box">
+                <span class="material-symbols-outlined" style="color:var(--gold-color);font-size:28px;">timer</span>
+                <span class="timer-digits" id="host-live-timer">05:00</span>
+              </div>
+
+              <!-- Nút quyền lực: KẾT THÚC SỚM BẤT KỲ LÚC NÀO -->
+              <button class="btn btn-danger btn-lg" id="btn-host-force-end"
+                title="Bấm để kết thúc trận đấu ngay lập tức và trao giải">
+                <span class="material-symbols-outlined">stop_circle</span>
+                KẾT THÚC TRẬN ĐẤU
+              </button>
+            </div>
+          </div>
+
+          <!-- BỐ CỤC 2 CỘT: TRÁI LÀ BẢNG XẾP HẠNG, PHẢI LÀ NHẬT KÝ CHIẾN TRƯỜNG THỜI GIAN THỰC -->
+          <div class="live-grid-layout">
+
+            <!-- CỘT TRÁI: BẢNG XẾP HẠNG (LEADERBOARD) -->
+            <div class="live-leaderboard-col">
+              <div class="col-section-header">
+                <div class="col-section-title">
+                  <span class="material-symbols-outlined" style="color:var(--gold-color);">leaderboard</span>
+                  <h3>BẢNG XẾP HẠNG TRỰC TIẾP</h3>
+                </div>
+                <span class="live-badge-pulse">● TRỰC TIẾP</span>
+              </div>
+
+              <div class="leaderboard-list" id="host-live-leaderboard-list">
+                <!-- Render danh sách sinh viên thời gian thực -->
+              </div>
+            </div>
+
+            <!-- CỘT PHẢI: NHẬT KÝ CHIẾN TRƯỜNG THỜI GIAN THỰC (LIVE LOG FEED) -->
+            <div class="live-log-col">
+              <div class="col-section-header">
+                <div class="col-section-title">
+                  <span class="material-symbols-outlined"
+                    style="color:var(--gold-color);">stars</span>
+                  <h3>NHẬT KÝ RƯƠNG BÍ ẨN & CƯỚP ĐIỂM</h3>
+                </div>
+                <span class="log-count-badge" id="host-log-count">0 sự kiện</span>
+              </div>
+
+              <!-- Danh sách log cập nhật liên tục -->
+              <div class="live-log-feed" id="host-live-log-feed">
+                <div class="log-empty-state">
+                  <span class="material-symbols-outlined" style="font-size:36px;opacity:0.4;">stars</span>
+                  <div>Đang chờ tín hiệu... Nhật ký sẽ hiển thị khi các chiến sĩ mở Rương bí ẩn & Cướp điểm!</div>
+                </div>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         VIEW 8: MÀN HÌNH BỤC VINH DANH TOP 3 (HOST PODIUM)
+         ======================================================== -->
+    <section id="view-host-podium" class="view-panel" style="display:none;">
+      <div class="host-container">
+        <div class="podium-container">
+
+          <div class="podium-header">
+            <div class="hero-badge">
+              <span class="material-symbols-outlined" style="font-size:16px;">emoji_events</span>
+              KẾT QUẢ CHUNG CUỘC MÔN VNR202
+            </div>
+            <h2>VINH DANH QUÁN QUÂN LỊCH SỬ</h2>
+            <div class="podium-subtitle">Chúc mừng Top 3 chiến sĩ có thành tích xuất sắc nhất trên chiến trường hôm nay!
+            </div>
+          </div>
+
+          <!-- Bục đứng 3D Top 1 - 2 - 3 (Chỉ tôn vinh 3 thứ hạng cao nhất) -->
+          <div class="podium-stage">
+
+            <!-- HẠNG 2: GIẢI NHÌ (Bên trái) -->
+            <div class="podium-col col-2">
+              <div class="podium-player-card">
+                <div class="podium-avatar">🥈</div>
+                <div class="podium-name" id="podium-name-2">---</div>
+              </div>
+              <div class="pedestal">
+                2
+                <div class="pedestal-rank-title">GIẢI NHÌ</div>
+              </div>
+            </div>
+
+            <!-- HẠNG 1: GIẢI NHẤT QUÁN QUÂN (Ở giữa, cao nhất) -->
+            <div class="podium-col col-1">
+              <div class="podium-player-card">
+                <div class="podium-crown">👑</div>
+                <div class="podium-avatar">🥇</div>
+                <div class="podium-name" id="podium-name-1">---</div>
+              </div>
+              <div class="pedestal">
+                1
+                <div class="pedestal-rank-title">QUÁN QUÂN</div>
+              </div>
+            </div>
+
+            <!-- HẠNG 3: GIẢI BA (Bên phải) -->
+            <div class="podium-col col-3">
+              <div class="podium-player-card">
+                <div class="podium-avatar">🥉</div>
+                <div class="podium-name" id="podium-name-3">---</div>
+              </div>
+              <div class="pedestal">
+                3
+                <div class="pedestal-rank-title">GIẢI BA</div>
+              </div>
+            </div>
+
+          </div>
+
+          <div style="display:flex;gap:16px;margin-top:10px;margin-bottom:4px;justify-content:center;flex-wrap:wrap;width:100%;">
+            <button class="btn btn-tonal" id="btn-host-go-home" style="min-width:170px;padding:12px 24px;">
+              <span class="material-symbols-outlined">home</span>
+              VỀ TRANG CHỦ
+            </button>
+            <button class="btn btn-secondary" id="btn-host-play-again" style="min-width:170px;padding:12px 24px;">
+              <span class="material-symbols-outlined">restart_alt</span>
+              TỔ CHỨC TRẬN MỚI
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <!-- ========================================================
+         MODAL 1: CHỌN ĐỔI LINH VẬT CHIẾN SĨ (POPUP MODAL TIỆN DỤNG)
+         ======================================================== -->
+    <div class="vnr202-modal-overlay" id="avatar-modal-overlay" style="display:none;">
+      <div class="vnr202-modal-card avatar-modal-box">
+        <div class="modal-card-header">
+          <div class="modal-header-title">
+            <span class="material-symbols-outlined" style="color:var(--gold-color);">pets</span>
+            <span>Chọn Linh Vật Đại Diện (32 Linh Vật)</span>
+          </div>
+          <button class="modal-close-btn" id="btn-close-avatar-modal" title="Đóng">✕</button>
+        </div>
+
+        <div class="modal-avatar-preview-bar">
+          <div class="preview-hero-icon" id="modal-avatar-preview-icon">🦁</div>
+          <div class="preview-hero-info">
+            <div class="preview-hero-name" id="modal-avatar-preview-name">Sư Tử</div>
+            <div class="preview-hero-sub">Chọn một linh vật bên dưới để làm đại diện thi đấu:</div>
+          </div>
+        </div>
+
+        <div class="modal-avatar-scroll-area">
+          <div class="modal-avatar-grid" id="modal-avatar-grid">
+            <!-- 32 Avatars render dynamically -->
+          </div>
+        </div>
+
+        <div class="modal-card-actions" style="margin-top:16px;">
+          <button class="btn btn-filled btn-lg" id="btn-confirm-avatar-modal" style="width:100%;">
+            <span class="material-symbols-outlined">check_circle</span>
+            Xác nhận chọn Linh Vật
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================================
+         MODAL 2: XÁC NHẬN KẾT THÚC TRẬN ĐẤU (POPUP CHUYÊN NGHIỆP)
+         ======================================================== -->
+    <div class="vnr202-modal-overlay" id="end-game-modal-overlay" style="display:none;">
+      <div class="vnr202-modal-card end-game-box">
+        <div class="modal-danger-badge">
+          <span class="material-symbols-outlined" style="font-size:42px;">stop_circle</span>
+        </div>
+        <h3 class="modal-danger-title">KẾT THÚC TRẬN ĐẤU?</h3>
+        <p class="modal-danger-desc">
+          Đồng chí Chỉ Huy có chắc chắn muốn <strong>kết thúc trận đấu ngay bây giờ</strong> để tiến hành tổng kết điểm và vinh danh <strong>3 Giải Nhất - Nhì - Ba</strong> lên bục vinh quang?
+        </p>
+        <div class="modal-card-actions">
+          <button class="btn btn-tonal" id="btn-modal-cancel-end">
+            <span class="material-symbols-outlined">arrow_back</span>
+            Tiếp tục thi đấu
+          </button>
+          <button class="btn btn-danger btn-lg" id="btn-modal-confirm-end">
+            <span class="material-symbols-outlined">military_tech</span>
+            Kết thúc & Trao giải
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Load Questions Bank & Main Application Script -->
+  <script src="questions.js"></script>
+  <script src="app.js"></script>
+</body>
+
+</html>
