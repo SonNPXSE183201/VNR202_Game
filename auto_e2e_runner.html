@@ -15,10 +15,11 @@
     const frame = document.getElementById('game-frame');
 
     frame.addEventListener('load', async () => {
-      const win = frame.contentWindow;
-      const app = win.app;
-      const urlParams = new URLSearchParams(window.location.search);
-      const step = urlParams.get('step') || 'home';
+      setTimeout(() => {
+        const win = frame.contentWindow;
+        const app = win.app;
+        const urlParams = new URLSearchParams(window.location.search);
+        const step = urlParams.get('step') || 'home';
 
       console.log("[E2E] Running step:", step);
 
@@ -63,9 +64,18 @@
           view: 'view-player-game'
         };
         app.restorePlayerSession(sessionState);
+      } else if (step === 'player_waiting') {
+        app.playerName = "Chiến Sĩ Quyết Thắng";
+        app.playerAvatar = "🦁";
+        app.playerRoomCode = "194588";
+        document.getElementById('display-player-name').textContent = app.playerName;
+        document.getElementById('display-player-avatar').textContent = app.playerAvatar;
+        document.getElementById('display-waiting-room').textContent = app.playerRoomCode;
+        app.switchView('view-player-waiting');
       }
 
       document.title = "READY_" + step;
+      }, 300);
     });
   </script>
 </body>
