@@ -9,8 +9,9 @@ const text = (value, min = 2, max = 30) => {
   if (typeof value !== "string") fail("Nội dung không hợp lệ.");
   const clean = value
     .normalize("NFC")
+    .replace(/[\u0000-\u001f\u007f\p{Cf}]/gu, "")
     .trim()
-    .replace(/[\u0000-\u001f\u007f]/g, "");
+    .replace(/\s+/gu, " ");
   if (clean.length < min || clean.length > max)
     fail(`Vui lòng nhập từ ${min} đến ${max} ký tự.`);
   return clean;
@@ -62,13 +63,13 @@ class Game {
   }
   config(input) {
     if (
-      ![7, 8].includes(input.teams) ||
+      !Number.isInteger(input.teams) || input.teams < 1 || input.teams > 9 ||
       ![180, 210, 240, 270].includes(input.duration) ||
       ![300, 330, 360].includes(input.matchLimit) ||
       input.duration >= input.matchLimit
     )
       fail(
-        "Chọn 7–8 đội, thời gian đầu 180–270 giây và giới hạn trận 300–360 giây.",
+        "Chọn 1–9 đội, thời gian đầu 180–270 giây và giới hạn trận 300–360 giây.",
       );
     if (input.reviewed !== true)
       fail("Host cần xác nhận đã duyệt nội dung các câu được chọn.");
@@ -142,6 +143,13 @@ class Game {
     if (!r) fail("Không tìm thấy phòng. Kiểm tra lại mã 6 số.");
     return r;
   }
+  playerName(room, value, exceptId = null) {
+    const name = text(value);
+    const key = name.toLocaleLowerCase("vi");
+    if (room.players.some(p => p.id !== exceptId && text(p.name).toLocaleLowerCase("vi") === key))
+      fail("Tên này đã có trong phòng. Vui lòng chọn tên khác hoặc thêm mã sinh viên.");
+    return name;
+  }
   join(code, name, avatar, teamId) {
     const room = this.room(code);
     if (room.locked || room.phase !== "lobby")
@@ -155,13 +163,7 @@ class Game {
       !room.teams[teamId]
     )
       fail("Chọn avatar và đội hợp lệ.");
-    name = text(name);
-    const base = name;
-    let suffix = 2;
-    while (room.players.some((p) => p.name === name)) {
-      const tail = ` (${suffix++})`;
-      name = `${base.slice(0, 30 - tail.length)}${tail}`;
-    }
+    name = this.playerName(room, name);
     const player = {
       id: id(),
       name,
@@ -480,7 +482,7 @@ class Game {
       const p = room.players.find((p) => p.id === data.playerId);
       if (!p || !Number.isInteger(data.teamId) || !room.teams[data.teamId])
         fail("Không tìm thấy người hoặc đội.");
-      p.name = text(data.name);
+      p.name = this.playerName(room, data.name, p.id);
       p.teamId = data.teamId;
       p.ready = false;
     } else if (op === "remove") {
@@ -574,7 +576,7 @@ class Game {
         data.avatar > 11
       )
         fail("Không thể sửa hồ sơ khi phòng khóa hoặc dữ liệu không hợp lệ.");
-      p.name = text(data.name);
+      p.name = this.playerName(room, data.name, p.id);
       p.avatar = data.avatar;
       p.teamId = data.teamId;
       p.ready = false;
