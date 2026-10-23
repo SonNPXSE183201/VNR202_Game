@@ -1,5 +1,7 @@
 # Kiểm thử phiên bản sinh tồn — mỗi câu một lần gửi
 
+Kiểm thử mới bằng **50 trang trình duyệt thật**, tự nhập/chọn/sẵn sàng/trả lời qua UI (không dùng socket bot): xem [BROWSER-50.md](BROWSER-50.md). Lượt này đã phát hiện và sửa màn chiếu 8 đội tràn 1080p; không dùng số liệu tải socket thay cho bằng chứng giao diện.
+
 Lượt kiểm tra bàn giao mới nhất sau dropdown: **[RELEASE-CHECK.md](RELEASE-CHECK.md)**. Đã chạy lại 22 test, bốn kịch bản browser, tải 25/50 tăng tốc và 50 người đủ 330 giây thực; các số liệu phía dưới là lịch sử từng lần chạy.
 
 ## Đồng bộ dropdown (23/10/2026)

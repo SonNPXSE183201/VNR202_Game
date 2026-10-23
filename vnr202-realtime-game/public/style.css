@@ -1121,7 +1121,7 @@ main:focus {
 .question-meta {
   display: flex;
   align-items: center;
-  justify-content: space-between;
+  justify-content: flex-end;
   gap: 10px;
   font-size: 13px;
   color: var(--muted);
@@ -1640,6 +1640,42 @@ dialog p {
   --team-light: #edf0fb;
 }
 @media (min-width: 1200px) {
+  /* Eight teams may have seven members each. Keep the full roster visible
+     without duplicating the live feedback already available to players/host. */
+  .screen .teams-grid[data-count="8"] .team-card {
+    padding: 12px 16px;
+  }
+  .screen .teams-grid[data-count="8"] .team-top {
+    margin-bottom: 10px;
+  }
+  .screen .teams-grid[data-count="8"] .holder {
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  .screen .teams-grid[data-count="8"] .holder > div {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    min-width: 0;
+  }
+  .screen .teams-grid[data-count="8"] .holder small {
+    margin: 0;
+    flex-shrink: 0;
+  }
+  .screen .teams-grid[data-count="8"] .holder strong {
+    font-size: 14px;
+    overflow-wrap: anywhere;
+  }
+  .screen .teams-grid[data-count="8"] .fuse,
+  .screen .teams-grid[data-count="8"] .feedback {
+    display: none;
+  }
+  .screen .teams-grid[data-count="8"] .member-list {
+    gap: 8px 12px;
+  }
+  .screen .teams-grid[data-count="8"] .team-card > p.fine {
+    margin: 8px 0 0;
+  }
   .screen .teams-grid[data-count="1"] {
     grid-template-columns: 1fr;
   }

@@ -35,6 +35,14 @@ async (page) => {
         .count()
     )
       break;
+    const remaining = await page.locator("[data-timer]").innerText();
+    const parts = remaining.split(":").map(Number);
+    if (parts[0] * 60 + parts[1] <= 12) {
+      await page
+        .getByRole("heading", { name: "Kết quả sinh tồn", exact: true })
+        .waitFor({ timeout: 20000 });
+      break;
+    }
     const visible = [];
     // Read rendered UI only; do not read client/session internals or emit socket messages.
     for (let i = 0; i < players.length; i += 10) {
@@ -50,6 +58,7 @@ async (page) => {
                 (el) => el.lastElementChild.textContent,
               ),
               online: document.querySelector("#connection")?.textContent,
+              meta: document.querySelector(".question-meta")?.textContent,
             }))),
           })),
         )),
@@ -60,6 +69,10 @@ async (page) => {
       "A browser participant disconnected",
     );
     const holders = visible.filter((v) => v.holder);
+    assert(
+      holders.every((v) => !/Câu\s+\d+/u.test(v.meta || "")),
+      "Player question number is still visible",
+    );
     for (let i = 0; i < holders.length; i += 4) {
       await Promise.all(
         holders.slice(i, i + 4).map(async (v) => {
