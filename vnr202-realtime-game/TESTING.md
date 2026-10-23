@@ -1,5 +1,7 @@
 # Kiểm thử phiên bản sinh tồn — mỗi câu một lần gửi
 
+Lượt kiểm tra bàn giao mới nhất sau dropdown: **[RELEASE-CHECK.md](RELEASE-CHECK.md)**. Đã chạy lại 22 test, bốn kịch bản browser, tải 25/50 tăng tốc và 50 người đủ 330 giây thực; các số liệu phía dưới là lịch sử từng lần chạy.
+
 ## Đồng bộ dropdown (23/10/2026)
 
 CSS áp dụng toàn bộ select, bao gồm cấu hình, chọn đội/avatar và lọc log. Kiểm tra Chromium bằng Playwright: popup mở được, appearance base-select, bo góc 12px, màu mục đang chọn đúng #962f35. ArrowDown/Enter đổi 8→9; Escape giữ giá trị. 320/390/768/1440px không tràn ngang khi mở menu. Forced-colors trở về appearance auto. Đã mở xem ảnh dropdown desktop và 390px ở output/playwright/dropdown-*.png. Trình duyệt không hỗ trợ base-select dùng bộ chọn gốc; chưa chạy trên Safari/Firefox hoặc thiết bị vật lý. Chỉ thay CSS, không đổi luật/API/chấm kết quả.
