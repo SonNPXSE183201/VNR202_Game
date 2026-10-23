@@ -1,6 +1,6 @@
 # Nội dung Dấu mốc độc lập · VNR202
 
-Ngân hàng đang dùng: `src/questions.js`, phiên bản `group01-1945-1946-v2-powers`, 60 câu. File `../questions.js` của trò chơi cũ được giữ nguyên, không còn là đầu vào của bản mới.
+Ngân hàng đang dùng: `src/questions.js`, phiên bản `group01-1945-1946-v2-powers`, 60 câu. Các file của game cũ ở thư mục cha đã được xóa theo yêu cầu; bản này chỉ dùng ngân hàng trong thư mục game.
 
 Nguồn biên soạn: PDF **VNR202_Group01_SE1819_Chương 2 Đảng lãnh đạo hai cuộc kháng chiến, hoàn thành giải phóng dân tộc, thống nhất đất nước.pdf** trong thư mục này. Tài liệu có 34 trang. Dù tiêu đề chương bao quát 1945–1975, phần trình bày thực tế tập trung vào xây dựng và bảo vệ chính quyền cách mạng 1945–1946. Không đưa câu 1947–1950 của kho cũ vào bản mới.
 

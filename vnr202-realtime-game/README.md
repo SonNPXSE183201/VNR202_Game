@@ -90,7 +90,7 @@ Host cấu hình trước trận: **1–9 đội**, thời gian đầu **180/210
 
 ## 6. Câu hỏi và công bằng
 
-Ngân hàng **`src/questions.js`** gồm 60 câu được biên soạn theo PDF thuyết trình Nhóm 01 trong thư mục này, phạm vi **1945–1946**. Mỗi câu có tham chiếu trang PDF trong metadata và lời giải. Kho `../questions.js` được giữ nguyên cho game cũ, không còn dùng cho bản mới. Xem [CONTENT.md](CONTENT.md) về phạm vi, chi tiết cần đối chiếu và nguồn ảnh tư liệu.
+Ngân hàng **`src/questions.js`** gồm 60 câu được biên soạn theo PDF thuyết trình Nhóm 01 trong thư mục này, phạm vi **1945–1946**. Mỗi câu có tham chiếu trang PDF trong metadata và lời giải. Các file game cũ ở thư mục cha đã được xóa; bản này chỉ dùng ngân hàng trong thư mục game. Xem [CONTENT.md](CONTENT.md) về phạm vi, chi tiết cần đối chiếu và nguồn ảnh tư liệu.
 
 Tên mới **Dấu mốc độc lập · VNR202**, logo sách và mốc đánh dấu, giao diện đỏ trầm/xanh đậm. Ảnh Tổng tuyển cử 1946 có nguồn TTXVN, giữ nguyên watermark; không tạo ảnh AI lãnh tụ/sự kiện. Sau cập nhật ngân hàng phải tạo phòng mới; snapshot khác phiên bản câu bị bỏ qua để không lẫn ID câu.
 
