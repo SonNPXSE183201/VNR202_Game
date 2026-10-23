@@ -113,7 +113,7 @@ Bấm Mở màn chiếu để chiếu tab công khai; giữ tab điều khiển 
 
 Phiên lưu trong sessionStorage của tab; tải lại giữ phiên, đóng tab có thể mất phiên. Một phiên chỉ một kết nối được gửi. Màn chiếu chỉ đọc dữ liệu công khai; link host giám sát là thông tin riêng tư.
 
-Qua Internet cần Node chạy liên tục, reverse proxy hỗ trợ WebSocket, HTTPS/WSS và PUBLIC_ORIGIN đúng trong `.env`. Không chạy bằng Live Server, file index.html hoặc hosting tĩnh. Chưa triển khai Internet.
+Qua Internet cần Node chạy liên tục, reverse proxy hỗ trợ WebSocket, HTTPS/WSS. Trên Render, server tự nhận `RENDER_EXTERNAL_URL` khi chưa đặt `PUBLIC_ORIGIN`; nếu dùng tên miền riêng thì đặt `PUBLIC_ORIGIN` bằng đúng URL HTTPS công khai. Không tự suy luận HTTPS từ kết nối HTTP nội bộ sau proxy. Không chạy bằng Live Server, file index.html hoặc hosting tĩnh. Chưa triển khai Internet.
 
 ## 8. Dữ liệu và bảo mật
 

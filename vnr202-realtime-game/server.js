@@ -11,9 +11,23 @@ const bank = require("../questions");
 function createApp({
   hostKey = process.env.HOST_KEY,
   dataDir = path.join(__dirname, "data"),
-  publicOrigin = process.env.PUBLIC_ORIGIN,
+  renderOrigin = process.env.RENDER_EXTERNAL_URL,
+  publicOrigin = process.env.PUBLIC_ORIGIN || renderOrigin,
   persist = true,
 } = {}) {
+  if (publicOrigin) {
+    const parsed = new URL(publicOrigin.trim());
+    if (
+      !["http:", "https:"].includes(parsed.protocol) ||
+      parsed.username ||
+      parsed.password
+    ) {
+      throw new Error(
+        "PUBLIC_ORIGIN phải là địa chỉ HTTP/HTTPS công khai, không chứa thông tin đăng nhập.",
+      );
+    }
+    publicOrigin = parsed.origin;
+  }
   if (!hostKey || hostKey.length < 16 || hostKey.includes("replace-with"))
     throw new Error(
       "Chạy npm run setup rồi cấu hình HOST_KEY trong .env (ít nhất 16 ký tự).",

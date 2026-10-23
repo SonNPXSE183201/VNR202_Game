@@ -4,7 +4,7 @@ Ngày: 23/10/2026, Asia/Saigon. Windows, Node.js 24.16.0, Chromium qua Playwrigh
 
 ## Chức năng
 
-`npm test`: **15/15 PASS**, không bỏ qua ca nào.
+`npm test`: **17/17 PASS**, không bỏ qua ca nào.
 
 Bảo đảm kiểm tra:
 
@@ -73,3 +73,7 @@ npx playwright-cli -s=survival run-code --filename scripts/browser-flow.js
 - Cần tổng duyệt điện thoại iOS/Android, QR, đọc máy chiếu và Wi-Fi thật. RTT localhost không phải cam kết trên mạng lớp.
 - Website không cấm tuyệt đối extension/đổi tab; tín hiệu không đủ chứng minh gian lận. Độ khó câu và số người trong đội chưa được cân bằng thực nghiệm.
 - Nếu tất cả đội nổ sớm thì trận kết thúc sớm; 5–7 phút là khung tổ chức với trần thời gian, không cưỡng ép kéo dài khi tất cả đã thua.
+
+## Bản vá Origin trên Render
+
+Tái hiện trực tiếp: health HTTP 200 nhưng WebSocket có Origin HTTPS thật bị HTTP 403; kết nối native không có Origin vẫn mở. Thêm hai kiểm thử hồi quy trước sửa: cả hai FAIL với 403. Bản vá tự dùng RENDER_EXTERNAL_URL nếu PUBLIC_ORIGIN chưa đặt, chuẩn hóa khoảng trắng/dấu slash và vẫn chặn Origin bên ngoài. Sau sửa npm test: 17/17 PASS. PUBLIC_ORIGIN đặt rõ ràng vẫn ưu tiên hơn URL Render; cấu hình sai tên miền cần được sửa ở Environment. Không nới lỏng kiểm tra Origin thành cho phép tất cả.

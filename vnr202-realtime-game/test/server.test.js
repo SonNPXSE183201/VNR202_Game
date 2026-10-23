@@ -16,6 +16,55 @@ const config = {
   reviewed: true,
 };
 
+test("Render HTTPS origin works behind an HTTP proxy without PUBLIC_ORIGIN", async (t) => {
+  const app = createApp({
+    hostKey: randomBytes(24).toString("hex"),
+    renderOrigin: "https://vnr202-test.onrender.com",
+    persist: false,
+  });
+  await new Promise((resolve) => app.server.listen(0, "127.0.0.1", resolve));
+  t.after(() => app.close());
+  const base = `http://127.0.0.1:${app.server.address().port}`;
+  const peer = new Peer(
+    base.replace("http", "ws") + "/ws",
+    "https://vnr202-test.onrender.com",
+  );
+  t.after(() => peer.close());
+  assert.ok((await peer.call("ping")).serverNow);
+  assert.deepEqual(
+    (await (await fetch(base + "/api/network")).json()).addresses,
+    ["https://vnr202-test.onrender.com"],
+  );
+});
+
+test("configured public origin is normalized, takes precedence and still rejects other sites", async (t) => {
+  const app = createApp({
+    hostKey: randomBytes(24).toString("hex"),
+    publicOrigin: "  https://class.example.com/  ",
+    renderOrigin: "https://vnr202-test.onrender.com",
+    persist: false,
+  });
+  await new Promise((resolve) => app.server.listen(0, "127.0.0.1", resolve));
+  t.after(() => app.close());
+  const base = `http://127.0.0.1:${app.server.address().port}`;
+  const peer = new Peer(
+    base.replace("http", "ws") + "/ws",
+    "https://class.example.com",
+  );
+  t.after(() => peer.close());
+  assert.ok((await peer.call("ping")).serverNow);
+  const rejected = new Peer(
+    base.replace("http", "ws") + "/ws",
+    "https://evil.example",
+  );
+  t.after(() => rejected.close());
+  await assert.rejects(rejected.opened, /403/);
+  assert.deepEqual(
+    (await (await fetch(base + "/api/network")).json()).addresses,
+    ["https://class.example.com"],
+  );
+});
+
 test("HTTP serves only public assets and rejects cross-origin WebSockets", async (t) => {
   const app = createApp({
     hostKey: randomBytes(24).toString("hex"),
