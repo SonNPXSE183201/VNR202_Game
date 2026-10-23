@@ -2,8 +2,12 @@
 const fs = require("node:fs");
 const path = require("node:path");
 const bank = require("../src/questions");
+const powers = process.argv.includes("--powers");
 const source = fs.readFileSync(
-  path.join(__dirname, "fifty-ui-play.template.js"),
+  path.join(
+    __dirname,
+    powers ? "fifty-ui-powers.template.js" : "fifty-ui-play.template.js",
+  ),
   "utf8",
 );
 const answers = Object.fromEntries(
@@ -11,7 +15,10 @@ const answers = Object.fromEntries(
 );
 fs.mkdirSync(path.join(__dirname, "../output"), { recursive: true });
 fs.writeFileSync(
-  path.join(__dirname, "../output/fifty-ui-play.js"),
+  path.join(
+    __dirname,
+    powers ? "../output/fifty-ui-powers.js" : "../output/fifty-ui-play.js",
+  ),
   source.replace("/* QA_ANSWERS */ {}", JSON.stringify(answers)),
 );
 console.log(

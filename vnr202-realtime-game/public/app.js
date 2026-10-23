@@ -33,6 +33,8 @@ let selectedAvatar = 0,
   optionTurn = null,
   requestBusy = false,
   serverOffset = 0;
+let transferPickerTurn = null,
+  transferTarget = null;
 let draft = {
   teams: 8,
   duration: 240,
@@ -254,7 +256,7 @@ function timerBlock(s) {
 function teamCard(t, s, privateView = false) {
   const players = s.players.filter((p) => p.teamId === t.id),
     holder = players.find((p) => p.id === t.holder);
-  return `<section class="team-card ${t.eliminated ? "team-eliminated" : ""}" data-team="${t.id}"><div class="team-top"><div><h2>${esc(t.name)}</h2><span class="fine">${s.phase === "lobby" ? `${players.length} thành viên` : `Hạng ${t.rank} · ${t.eliminated ? "Đã nổ" : "Còn sống"}`}</span></div><div class="team-points"><span data-team-clock="${t.id}">${clock(s.phase === "finished" ? t.survivedMs : t.remainingMs)}</span><small>${s.phase === "finished" ? "sống sót" : "bom còn"}</small></div></div>${s.phase === "playing" && !t.eliminated ? `<div class="holder">${holder ? avatar(holder.avatar) : "💣"}<div><small>Đang giữ bom</small><strong>${esc(holder?.name || "Chờ kết nối")}</strong></div></div><div class="fuse"><span data-fuse="${t.id}"></span></div>` : ""}<div class="member-list">${players.map((p) => member(p, t.holder, s.phase === "lobby")).join("") || '<span class="fine">Chưa có thành viên</span>'}</div><p class="fine">${t.correctCount} câu đúng · ${t.wrongCount} lần sai · +${(t.grantedMs / 1000).toFixed(1)}s / −${(t.penaltyMs / 1000).toFixed(1)}s</p>${t.feedback ? `<p class="feedback ${esc(t.feedback.kind)}">${esc(t.feedback.text)}</p>` : ""}${privateView && t.question ? `<details class="team-detail" data-keep="question-${t.id}"><summary>Câu ${t.question.number} · xem nội dung</summary><p>${esc(t.question.text)}</p><ol class="host-question-options">${t.question.options.map((o) => `<li>${esc(o.text)}${o.rejected ? " — đã chọn sai" : ""}</li>`).join("")}</ol></details>` : ""}</section>`;
+  return `<section class="team-card ${t.eliminated ? "team-eliminated" : ""}" data-team="${t.id}"><div class="team-top"><div><h2>${esc(t.name)}</h2><span class="fine">${s.phase === "lobby" ? `${players.length} thành viên` : `Hạng ${t.rank} · ${t.eliminated ? "Đã nổ" : "Còn sống"}`}</span></div><div class="team-points"><span data-team-clock="${t.id}">${clock(s.phase === "finished" ? t.survivedMs : t.remainingMs)}</span><small>${s.phase === "finished" ? "sống sót" : "bom còn"}</small><small>Chuỗi ${t.streak} · 50/50 ${t.powers.fifty ? "✓" : "—"} · ★ ${t.powers.star ? "✓" : "—"} · Chuyển ${t.powers.transfer ? "✓" : t.transferUnlocked ? "Sẵn" : "Khóa"}</small></div></div>${s.phase === "playing" && !t.eliminated ? `<div class="holder">${holder ? avatar(holder.avatar) : "💣"}<div><small>Đang giữ bom</small><strong>${esc(holder?.name || "Chờ kết nối")}</strong></div></div><div class="fuse"><span data-fuse="${t.id}"></span></div>` : ""}<div class="member-list">${players.map((p) => member(p, t.holder, s.phase === "lobby")).join("") || '<span class="fine">Chưa có thành viên</span>'}</div><p class="fine">${t.correctCount} câu đúng · ${t.wrongCount} lần sai · +${(t.grantedMs / 1000).toFixed(1)}s / −${(t.penaltyMs / 1000).toFixed(1)}s</p>${t.feedback ? `<p class="feedback ${esc(t.feedback.kind)}">${esc(t.feedback.text)}</p>` : ""}${privateView && t.question ? `<details class="team-detail" data-keep="question-${t.id}"><summary>Câu ${t.question.number} · xem nội dung</summary><p>${esc(t.question.text)}</p><ol class="host-question-options">${t.question.options.map((o) => `<li>${esc(o.text)}${o.rejected ? " — đã chọn sai" : ""}</li>`).join("")}</ol></details>` : ""}</section>`;
 }
 function joinUrl() {
   const url = new URL("/", joinBase);
@@ -597,7 +599,7 @@ function memberEditor(s) {
   return `<details class="panel team-edit" data-keep="members"><summary>Quản lý đội và thành viên</summary><h3>Tên đội</h3>${s.teams.map((t) => `<div class="edit-member"><label>Đội ${t.id + 1}<input id="team-name-${t.id}" value="${esc(t.name)}" maxlength="30" minlength="2"></label><span></span><button class="quiet" data-rename="${t.id}">Đổi tên đội</button></div>`).join("")}<h3>Người chơi</h3>${s.players.map((p) => `<div class="edit-member"><label>${avatars[p.avatar]?.icon || ""} Tên<input id="name-${p.id}" value="${esc(p.name)}" minlength="2" maxlength="30"></label><label>Đội<select id="team-${p.id}">${s.teams.map((t) => `<option value="${t.id}" ${p.teamId === t.id ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label><button class="quiet" data-member="${p.id}">Lưu</button><button class="quiet" data-remove="${p.id}">Xóa khỏi phòng</button></div>`).join("")}</details>`;
 }
 function logPanel(s) {
-  return `<section class="panel log-panel"><div class="log-toolbar"><h2>Nhật ký phòng</h2><button class="quiet" data-action="export">Xuất log CSV</button></div><div class="filter-row"><select id="log-team" aria-label="Lọc log theo đội"><option value="">Tất cả đội</option>${s.teams.map((t) => `<option value="${t.id}" ${logTeam === String(t.id) ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select><select id="log-type" aria-label="Lọc loại log"><option value="">Tất cả sự kiện</option><option value="answer" ${logType === "answer" ? "selected" : ""}>Trả lời</option><option value="signal" ${logType === "signal" ? "selected" : ""}>Tín hiệu rời trang</option><option value="connection" ${logType === "connection" ? "selected" : ""}>Kết nối</option></select></div><p class="fine">150 sự kiện gần nhất; xuất CSV để xem lịch sử được lưu (tối đa 2.000 sự kiện). Tín hiệu rời trang do client báo, không phải bằng chứng chắc chắn về gian lận.</p><div class="log-list" id="log-list">${logItems(s)}</div></section>`;
+  return `<section class="panel log-panel"><div class="log-toolbar"><h2>Nhật ký phòng</h2><button class="quiet" data-action="export">Xuất log CSV</button></div><div class="filter-row"><select id="log-team" aria-label="Lọc log theo đội"><option value="">Tất cả đội</option>${s.teams.map((t) => `<option value="${t.id}" ${logTeam === String(t.id) ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select><select id="log-type" aria-label="Lọc loại log"><option value="">Tất cả sự kiện</option><option value="answer" ${logType === "answer" ? "selected" : ""}>Trả lời</option><option value="power" ${logType === "power" ? "selected" : ""}>Quyền trợ giúp</option><option value="timeout" ${logType === "timeout" ? "selected" : ""}>Hết hạn câu</option><option value="signal" ${logType === "signal" ? "selected" : ""}>Tín hiệu rời trang</option><option value="connection" ${logType === "connection" ? "selected" : ""}>Kết nối</option></select></div><p class="fine">150 sự kiện gần nhất; xuất CSV để xem lịch sử được lưu (tối đa 2.000 sự kiện). Tín hiệu rời trang do client báo, không phải bằng chứng chắc chắn về gian lận.</p><div class="log-list" id="log-list">${logItems(s)}</div></section>`;
 }
 function logItems(s) {
   const logs = (s.logs || []).filter(
@@ -695,7 +697,7 @@ function renderPlayer() {
     content = `<section><h1>Kết quả của ${esc(team.name)}</h1><p class="player-score">Hạng ${team.rank} · ${clock(team.remainingMs)} dự trữ</p>${podium(s)}${leaderboard(s)}${review(s)}</section>`;
   else if (q && s.phase === "playing") {
     const mine = me.id === team.holder;
-    content = `<div class="player-banner ${mine ? "" : "support"}">${holder ? avatar(holder.avatar) : ""}<div><strong>${mine ? "Đến lượt bạn giữ bom!" : `${esc(holder?.name || "Đồng đội")} đang giữ bom`}</strong><p>${mine ? "Đúng nhanh được cộng giây; sai bị trừ 8 giây." : "Bạn có thể góp ý; chỉ người giữ bom gửi đáp án."}</p></div></div><section class="question-panel"><div class="question-meta"><span>Chỉ gửi một lần</span></div><h1>${esc(q.text)}</h1><div class="options">${q.options.map((o, index) => `<button class="option${selectedOption === o.id ? " selected" : ""}${o.rejected ? " rejected" : ""}" data-option="${esc(o.id)}" aria-pressed="${selectedOption === o.id}" ${!mine || o.rejected || q.answered || requestBusy ? "disabled" : ""}><span class="letter">${"ABCD"[index]}</span><span>${esc(o.text)}</span></button>`).join("")}</div>${mine ? `<button id="answer-submit" class="question-submit" ${!selectedOption || requestBusy || q.answered ? "disabled" : ""}>${q.answered ? "Đã gửi — chờ kết quả" : requestBusy ? "Đang gửi…" : "Trả lời"}</button><p class="fine" id="answer-lock" role="status"></p>` : '<p class="notice">Bạn đang hỗ trợ đồng đội. Chờ đến lượt mình nhé!</p>'}${team.feedback ? `<p class="feedback ${esc(team.feedback.kind)}" role="status">${esc(team.feedback.text)}</p>` : ""}</section>`;
+    content = `<div class="player-banner ${mine ? "" : "support"}">${holder ? avatar(holder.avatar) : ""}<div><strong>${mine ? "Đến lượt bạn giữ bom!" : `${esc(holder?.name || "Đồng đội")} đang giữ bom`}</strong><p>${mine ? "Đúng nhanh được cộng giây; sai bị trừ 8 giây." : "Bạn có thể góp ý; chỉ người giữ bom gửi đáp án."}</p></div></div><section class="question-panel"><div class="question-meta"><span>Còn <strong data-question-timer>15</strong>s trả lời</span><span>Chỉ gửi một lần</span></div><h1>${esc(q.text)}</h1><div class="options">${q.options.map((o, index) => `<button class="option${selectedOption === o.id ? " selected" : ""}${o.rejected ? " rejected" : ""}" data-option="${esc(o.id)}" ${o.rejected ? "hidden" : ""} aria-pressed="${selectedOption === o.id}" ${!mine || o.rejected || q.answered || requestBusy ? "disabled" : ""}><span class="letter">${"ABCD"[index]}</span><span>${esc(o.text)}</span></button>`).join("")}</div>${mine ? `<button id="answer-submit" class="question-submit" ${!selectedOption || requestBusy || q.answered ? "disabled" : ""}>${q.answered ? "Đã gửi — chờ kết quả" : requestBusy ? "Đang gửi…" : "Trả lời"}</button><p class="fine" id="answer-lock" role="status"></p>` : '<p class="notice">Bạn đang hỗ trợ đồng đội. Chờ đến lượt mình nhé!</p>'}${lifelines(team, mine)}${team.feedback ? `<p class="feedback ${esc(team.feedback.kind)}" role="status">${esc(team.feedback.text)}</p>` : ""}</section>`;
   } else
     content = `<section class="panel waiting-panel"><div class="waiting-illustration" aria-hidden="true">${team.eliminated ? "💥" : "💣"}</div><h1>${team.eliminated ? "Bom đội bạn đã nổ" : phaseLabel(s)}</h1><p>${team.eliminated ? "Đội đã dừng chơi. Cùng theo dõi cuộc đua của những đội còn lại." : s.phase === "paused" ? "Tất cả đồng hồ đều dừng; không ai được gửi đáp án." : "Chuẩn bị cùng đội trả lời để tích lũy thời gian."}</p><p class="player-score">Sống sót ${clock(team.survivedMs)} · Hạng ${team.rank}</p></section>${team.eliminated ? leaderboard(s) : ""}`;
   preserveRender(
@@ -706,6 +708,37 @@ function renderPlayer() {
   );
   bindActions();
   bindProfile();
+  document.querySelectorAll("[data-power]").forEach(
+    (button) =>
+      (button.onclick = async () => {
+        if (button.dataset.power === "transfer") {
+          transferPickerTurn = q.id;
+          $("#transfer-picker").hidden = false;
+          return;
+        }
+        selectedOption = null;
+        await act("power", { kind: button.dataset.power, turnId: q.id });
+      }),
+  );
+  if ($("#transfer-confirm"))
+    $("#transfer-confirm").onclick = async () => {
+      selectedOption = null;
+      transferPickerTurn = null;
+      await act("power", {
+        kind: "transfer",
+        turnId: q.id,
+        targetId: Number($("#transfer-target").value),
+      });
+    };
+  if ($("#transfer-cancel"))
+    $("#transfer-cancel").onclick = () => {
+      transferPickerTurn = null;
+      $("#transfer-picker").hidden = true;
+    };
+  if ($("#transfer-target"))
+    $("#transfer-target").onchange = (event) => {
+      transferTarget = Number(event.target.value);
+    };
   document.querySelectorAll("[data-option]").forEach(
     (button) =>
       (button.onclick = () => {
@@ -742,6 +775,21 @@ function renderPlayer() {
         if (state) render();
       }
     };
+}
+function lifelines(team, mine) {
+  const q = team.question,
+    used = team.powers;
+  const disabled =
+    !mine || requestBusy || q?.power || state.phase !== "playing";
+  return `<section class="lifelines" aria-label="Quyền trợ giúp của đội"><p><strong>Quyền trợ giúp</strong> · Chuỗi đúng: ${team.streak} câu${team.transferUnlocked ? " · Đã mở chuyển thời gian" : ""}</p><div class="lifeline-buttons"><button type="button" class="secondary" data-power="fifty" ${disabled || used.fifty ? "disabled" : ""}>50/50${used.fifty ? " · Đã dùng" : ""}</button><button type="button" class="secondary" data-power="star" ${disabled || used.star ? "disabled" : ""}>Ngôi sao +15s${used.star ? " · Đã dùng" : ""}</button><button type="button" class="secondary" data-power="transfer" ${disabled || used.transfer || !team.transferUnlocked ? "disabled" : ""}>Chuyển thời gian${used.transfer ? " · Đã dùng" : !team.transferUnlocked ? " · Cần chuỗi 3" : ""}</button></div><p class="fine">Một quyền mỗi câu, một lần mỗi quyền/đội. ${q?.power === "star" ? "Ngôi sao đã bật: đúng câu này thêm 15s." : q?.power === "fifty" ? "50/50: chọn trong hai phương án còn lại." : "Dùng quyền không gia hạn câu."}</p><div id="transfer-picker" ${transferPickerTurn === q?.id ? "" : "hidden"}><label>Đội nhận tác động<select id="transfer-target">${state.teams
+    .filter((t) => t.id !== team.id && !t.eliminated)
+    .map(
+      (t) =>
+        `<option value="${t.id}" ${transferTarget === t.id ? "selected" : ""}>${esc(t.name)}</option>`,
+    )
+    .join(
+      "",
+    )}</select></label><p class="fine">Chuyển 50% thời gian của đội được chọn, tối đa 20s và không vượt trần dự trữ của đội bạn. Số giây chốt tại máy chủ.</p><button type="button" id="transfer-confirm">Xác nhận chuyển</button><button type="button" class="quiet" id="transfer-cancel">Quay lại</button></div></section>`;
 }
 function profileEditor(s) {
   return `<details data-keep="profile"><summary>Sửa avatar, tên hoặc đội</summary><form id="profile-form" class="form-stack"><label>Tên hiển thị<input id="profile-name" value="${esc(s.me.name)}" minlength="2" maxlength="30" required></label><label>Avatar<select id="profile-avatar">${avatars.map((a, i) => `<option value="${i}" ${s.me.avatar === i ? "selected" : ""}>${a.icon} ${esc(a.name)}</option>`).join("")}</select></label><label>Đội<select id="profile-team">${s.teams.map((t) => `<option value="${t.id}" ${t.id === s.me.teamId ? "selected" : ""}>${esc(t.name)}</option>`).join("")}</select></label><button type="submit" class="secondary">Lưu hồ sơ</button></form></details>`;
@@ -789,6 +837,15 @@ function renderTimers() {
     el.textContent = clock(value);
     el.classList.toggle("urgent", active && value <= 15000);
   });
+  document
+    .querySelectorAll("[data-question-timer]")
+    .forEach(
+      (el) =>
+        (el.textContent = Math.max(
+          0,
+          Math.ceil(((own?.question?.deadline || now) - now) / 1000),
+        )),
+    );
   document.querySelectorAll("[data-team-clock]").forEach((el) => {
     const t = state.teams[Number(el.dataset.teamClock)];
     el.textContent = clock(
@@ -805,6 +862,7 @@ function renderTimers() {
         !active ||
         own.eliminated ||
         now >= own.deadline ||
+        now >= q.deadline ||
         now >= state.deadline;
     $("#answer-submit").disabled =
       !selectedOption ||

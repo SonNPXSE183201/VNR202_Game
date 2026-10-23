@@ -179,7 +179,7 @@ test("exact deadline answer cannot revive a bomb; tick uses actual expiry not de
     turn = t.turn,
     session = f.players.find((p) => p.session.playerId === turn.holder).session;
   f.advance(240000);
-  assert.equal(t.survivedMs, 240000);
+  assert.equal(t.survivedMs, 160000);
   assert.equal(t.eliminated, true);
   assert.throws(() =>
     f.game.answer(f.host.room, session, {
@@ -205,7 +205,10 @@ test("longest survival wins; simultaneous explosions share rank", () => {
 test("hard limit ends surviving teams, ranks their time reserve and records no fake explosion", () => {
   const f = fixture();
   start(f);
-  for (const t of f.host.room.teams) t.deadline = f.game.now() + 400000;
+  for (const t of f.host.room.teams) {
+    t.deadline = f.game.now() + 400000;
+    t.turn.deadline = f.game.now() + 400000;
+  }
   f.host.room.teams[0].deadline += 1000;
   f.advance(330000);
   assert.equal(f.host.room.phase, "finished");

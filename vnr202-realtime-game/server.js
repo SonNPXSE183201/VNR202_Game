@@ -312,6 +312,7 @@ function createApp({
             );
           game.tick();
           if (msg.op === "answer") result = game.answer(room, session, data);
+          else if (msg.op === "power") result = game.power(room, session, data);
           else if (["ready", "profile", "signal"].includes(msg.op))
             result = game.playerCommand(room, session, msg.op, data);
           else if (msg.op === "export") {

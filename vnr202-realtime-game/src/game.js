@@ -33,6 +33,9 @@ const newTeam = (i) => ({
   lastQid: null,
   turn: null,
   feedback: null,
+  streak: 0,
+  transferUnlocked: false,
+  powers: { fifty: false, star: false, transfer: false },
 });
 const categories = [
   { id: "context", name: "Bối cảnh sau độc lập", from: 1, to: 10 },
@@ -248,7 +251,7 @@ class Game {
     team.lastQid = team.deck.shift();
     return team.lastQid;
   }
-  openTurn(room, team, exclude, qid) {
+  openTurn(room, team, exclude, qid, at = this.now()) {
     const p = this.choose(room, team, exclude);
     if (!p) {
       team.turn = null;
@@ -265,7 +268,10 @@ class Game {
       holder: p.id,
       qid,
       options: this.shuffle([0, 1, 2, 3]).map((index) => ({ id: id(), index })),
-      openedAt: this.now(),
+      openedAt: at,
+      deadline: at + 15000,
+      hidden: [],
+      power: null,
       wrong: [],
       lockedUntil: 0,
       answered: false,
@@ -335,11 +341,48 @@ class Game {
   }
   settle(room) {
     if (room.phase !== "playing") return;
-    const before = room.teams.filter((t) => t.eliminated).length;
+    let changed = false;
     const at = Math.min(this.now(), room.deadline);
-    for (const team of room.teams)
-      if (!team.eliminated && team.deadline <= at)
-        this.explode(room, team, team.deadline);
+    for (const team of room.teams) {
+      while (!team.eliminated) {
+        const due = team.turn?.deadline ?? Infinity;
+        if (team.deadline <= Math.min(at, due)) {
+          this.explode(room, team, team.deadline);
+          changed = true;
+          break;
+        }
+        if (due > at || due >= room.deadline) break;
+        const turn = team.turn;
+        const deltaMs = -Math.min(8000, team.deadline - due);
+        team.deadline += deltaMs;
+        team.penaltyMs -= deltaMs;
+        team.wrongCount++;
+        team.streak = 0;
+        room.history.push({
+          teamId: team.id,
+          qid: turn.qid,
+          playerId: turn.holder,
+          correct: false,
+          timeout: true,
+          deltaMs,
+        });
+        this.log(
+          room,
+          "timeout",
+          `${team.name}: hết 15 giây, ${deltaMs / 1000}s; chuyển lượt.`,
+          { teamId: team.id, playerId: turn.holder, qid: turn.qid, deltaMs },
+        );
+        team.turn = null;
+        team.feedback = {
+          text: "Hết 15 giây: −8 giây. Chuyển người và câu mới.",
+          kind: "error",
+          at: due,
+        };
+        if (team.deadline <= due) this.explode(room, team, due);
+        else this.openTurn(room, team, turn.holder, undefined, due);
+        changed = true;
+      }
+    }
     if (room.teams.every((t) => t.eliminated))
       this.finish(
         room,
@@ -352,11 +395,82 @@ class Game {
         room.deadline,
         "Hết giới hạn trận. Đội sống sót được so thời gian còn lại.",
       );
+    if (room.phase === "finished" || changed) this.save(room);
+  }
+  power(room, session, input) {
+    this.settle(room);
+    if (room.phase !== "playing" || session.role !== "player")
+      fail("Chỉ dùng quyền khi đang chơi.");
+    const p = room.players.find((p) => p.id === session.playerId),
+      team = p && room.teams[p.teamId],
+      turn = team?.turn;
     if (
-      room.phase === "finished" ||
-      before !== room.teams.filter((t) => t.eliminated).length
+      !turn ||
+      team.eliminated ||
+      turn.holder !== p.id ||
+      turn.id !== input.turnId
     )
-      this.save(room);
+      fail("Chỉ người đang giữ bom được dùng quyền cho câu hiện tại.");
+    const kind = input.kind;
+    if (
+      !["fifty", "star", "transfer"].includes(kind) ||
+      team.powers[kind] ||
+      turn.power
+    )
+      fail("Quyền đã dùng hoặc câu này đã dùng một quyền.");
+    if (kind === "transfer") {
+      const target =
+        Number.isInteger(input.targetId) && room.teams[input.targetId];
+      if (
+        !team.transferUnlocked ||
+        !target ||
+        target.id === team.id ||
+        target.eliminated
+      )
+        fail("Cần 3 câu đúng liên tiếp và chọn đội khác còn chơi.");
+      const now = this.now();
+      const amount = Math.max(
+        0,
+        Math.min(
+          20000,
+          (target.deadline - now) / 2,
+          now + (room.config.duration + 60) * 1000 - team.deadline,
+        ),
+      );
+      if (amount <= 0) fail("Đội đã đầy dự trữ, chưa thể chuyển thời gian.");
+      team.deadline += amount;
+      target.deadline -= amount;
+      team.grantedMs += amount;
+      target.penaltyMs += amount;
+      target.feedback = {
+        text: `${team.name} chuyển ${(amount / 1000).toFixed(1)} giây từ đội bạn.`,
+        kind: "error",
+        at: now,
+      };
+      this.log(
+        room,
+        "power",
+        `${team.name} chuyển ${(amount / 1000).toFixed(1)}s từ ${target.name}.`,
+        { teamId: team.id, targetId: target.id, deltaMs: amount, kind },
+      );
+    } else if (kind === "fifty") {
+      const q = this.bank.get(turn.qid);
+      turn.hidden = this.shuffle(
+        turn.options.filter((o) => o.index !== q.correct),
+      )
+        .slice(0, 2)
+        .map((o) => o.id);
+    }
+    team.powers[kind] = true;
+    turn.power = kind;
+    this.log(
+      room,
+      "power",
+      `${team.name} dùng ${kind === "fifty" ? "50/50" : kind === "star" ? "Ngôi sao hy vọng" : "Chuyển thời gian"}.`,
+      { teamId: team.id, playerId: p.id, kind },
+    );
+    this.save(room);
+    return { used: kind };
   }
   answer(room, session, input) {
     this.settle(room);
@@ -375,13 +489,21 @@ class Game {
       fail("Bom đã nổ hoặc câu này không còn đến lượt bạn.");
 
     const option = turn.options.find((o) => o.id === input.option);
-    if (!option || turn.wrong.includes(option.id))
+    if (
+      !option ||
+      turn.wrong.includes(option.id) ||
+      turn.hidden.includes(option.id)
+    )
       fail("Phương án không hợp lệ hoặc đã chọn sai.");
     const q = this.bank.get(turn.qid),
       correct = option.index === q.correct,
       elapsed = this.now() - turn.openedAt;
     const before = team.deadline;
-    const requestedSeconds = correct ? timeBonus(elapsed) : -8;
+    const requestedSeconds = correct
+      ? timeBonus(elapsed) + (turn.power === "star" ? 15 : 0)
+      : -8;
+    team.streak = correct ? team.streak + 1 : 0;
+    if (team.streak >= 3) team.transferUnlocked = true;
     team.deadline = correct
       ? Math.min(
           team.deadline + requestedSeconds * 1000,
@@ -532,6 +654,7 @@ class Game {
           team.deadline += shift;
           if (team.turn) {
             team.turn.openedAt += shift;
+            team.turn.deadline += shift;
             team.turn.lockedUntil += shift;
           }
         }
@@ -660,6 +783,9 @@ class Game {
           rank: ranks.find((r) => r.id === t.id).rank,
           holder: turn?.holder || null,
           feedback: t.feedback,
+          streak: t.streak,
+          powers: t.powers,
+          transferUnlocked: t.transferUnlocked,
         };
         if (
           turn &&
@@ -675,11 +801,13 @@ class Game {
             options: turn.options.map((o) => ({
               id: o.id,
               text: q.options[o.index],
-              rejected: turn.wrong.includes(o.id),
+              rejected: turn.wrong.includes(o.id) || turn.hidden.includes(o.id),
             })),
             wrong: turn.wrong.length,
             lockedUntil: turn.lockedUntil,
             openedAt: turn.openedAt,
+            deadline: turn.deadline,
+            power: turn.power,
             answered: turn.answered,
           };
         }

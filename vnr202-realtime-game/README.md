@@ -1,5 +1,7 @@
 # Dấu mốc độc lập · VNR202 — sinh tồn theo đội
 
+**Luật cập nhật:** mỗi câu 15 giây; hết hạn trừ 8 giây và tự chuyển lượt. Có ba quyền tự chọn theo đội: 50/50, ngôi sao +15s khi đúng và chuyển 50% thời gian đối thủ (tối đa 20s) mở sau chuỗi 3 câu đúng. Mỗi quyền một lần/trận, mỗi câu một quyền. Xem **[POWERS.md](POWERS.md)** cho luật ưu tiên hiện tại và kiểm thử; mô tả bản trước phía dưới cần đọc cùng cập nhật này.
+
 Bản hiện tại thay thế hoàn toàn luật 8 lượt bom và cộng điểm trước đây. Mỗi đội có một đồng hồ riêng, **đúng cộng giây, sai trừ giây, sống lâu hơn xếp trên**. Mỗi câu chỉ gửi **một đáp án duy nhất**.
 
 ## 1. Luật mặc định

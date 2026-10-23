@@ -1121,7 +1121,7 @@ main:focus {
 .question-meta {
   display: flex;
   align-items: center;
-  justify-content: flex-end;
+  justify-content: space-between;
   gap: 10px;
   font-size: 13px;
   color: var(--muted);
@@ -1747,4 +1747,28 @@ dialog p {
   .top-actions {
     flex-shrink: 0;
   }
+}
+
+.lifelines {
+  margin-top: 20px;
+  padding-top: 16px;
+  border-top: 1px solid var(--line);
+}
+.lifelines p {
+  font-size: 13px;
+}
+.lifeline-buttons {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.lifeline-buttons button {
+  font-size: 13px;
+  flex: 1 1 110px;
+}
+#transfer-picker {
+  margin-top: 12px;
+  padding: 12px;
+  border: 1px solid var(--line);
+  border-radius: 10px;
 }
