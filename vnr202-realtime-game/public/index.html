@@ -1,24 +1,63 @@
 <!doctype html>
 <html lang="vi">
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
-  <meta name="theme-color" content="#1659b7">
-  <meta name="description" content="Trò chơi kiến thức VNR202 theo đội. Chọn avatar, vào nhóm và cùng nhau gỡ bom tri thức.">
-  <title>Ôm bom tri thức · VNR202</title>
-  <link rel="icon" href="/favicon.svg" type="image/svg+xml">
-  <link rel="stylesheet" href="/style.css">
-  <script src="/app.js" type="module"></script>
-</head>
-<body>
-  <a class="skip" href="#main">Đến nội dung chính</a>
-  <header class="topbar">
-    <a class="brand" href="/" aria-label="Ôm bom tri thức, trang đầu"><span class="brand-icon" aria-hidden="true">✦</span><span>Ôm bom <strong>tri thức</strong><small>VNR202 · 1945–1950</small></span></a>
-    <div class="top-actions"><span id="connection" class="connection" role="status">Đang kết nối…</span><button id="motion" class="icon-button" aria-pressed="false" title="Giảm chuyển động">Giảm chuyển động</button></div>
-  </header>
-  <main id="main" tabindex="-1"><p class="loading">Đang chuẩn bị sân chơi…</p></main>
-  <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
-  <dialog id="confirm-dialog"><form method="dialog"><h2 id="dialog-title">Xác nhận</h2><p id="dialog-text"></p><label id="reason-label" hidden>Lý do<input id="dialog-reason" minlength="5" maxlength="200"></label><div class="button-row"><button value="cancel" class="secondary">Quay lại</button><button id="dialog-confirm" value="confirm">Xác nhận</button></div></form></dialog>
-  <noscript>Trò chơi cần bật JavaScript để kết nối và nhận câu hỏi.</noscript>
-</body>
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#962f35" />
+    <meta
+      name="description"
+      content="Dấu mốc độc lập – trò chơi VNR202 theo đội, ôn tập xây dựng và bảo vệ chính quyền cách mạng 1945–1946."
+    />
+    <title>Dấu mốc độc lập · VNR202</title>
+    <link rel="icon" href="/favicon.svg" type="image/svg+xml" />
+    <link rel="stylesheet" href="/style.css" />
+    <script src="/app.js" type="module"></script>
+  </head>
+  <body>
+    <a class="skip" href="#main">Đến nội dung chính</a>
+    <header class="topbar">
+      <a class="brand" href="/" aria-label="Dấu mốc độc lập, trang đầu"
+        ><img
+          class="brand-icon"
+          src="/logo.svg"
+          alt=""
+          width="46"
+          height="46"
+        /><span
+          ><strong>Dấu mốc độc lập</strong
+          ><small>VNR202 · Lịch sử Đảng Cộng sản Việt Nam</small></span
+        ></a
+      >
+      <div class="top-actions">
+        <span id="connection" class="connection" role="status"
+          >Đang kết nối…</span
+        ><button
+          id="motion"
+          class="icon-button"
+          aria-pressed="false"
+          title="Giảm chuyển động"
+        >
+          Giảm chuyển động
+        </button>
+      </div>
+    </header>
+    <main id="main" tabindex="-1">
+      <p class="loading">Đang chuẩn bị sân chơi…</p>
+    </main>
+    <div id="toast" class="toast" role="status" aria-live="polite" hidden></div>
+    <dialog id="confirm-dialog">
+      <form method="dialog">
+        <h2 id="dialog-title">Xác nhận</h2>
+        <p id="dialog-text"></p>
+        <label id="reason-label" hidden
+          >Lý do<input id="dialog-reason" minlength="5" maxlength="200"
+        /></label>
+        <div class="button-row">
+          <button value="cancel" class="secondary">Quay lại</button
+          ><button id="dialog-confirm" value="confirm">Xác nhận</button>
+        </div>
+      </form>
+    </dialog>
+    <noscript>Trò chơi cần bật JavaScript để kết nối và nhận câu hỏi.</noscript>
+  </body>
 </html>

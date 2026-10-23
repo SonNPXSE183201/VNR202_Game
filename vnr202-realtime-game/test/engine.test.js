@@ -1,7 +1,7 @@
 const { test } = require("node:test");
 const assert = require("node:assert/strict");
 const { Game, timeBonus } = require("../src/game");
-const bank = require("../../questions");
+const bank = require("../src/questions");
 const config = {
   teams: 8,
   duration: 240,
@@ -56,7 +56,7 @@ test("host can create and play with every team count from 1 to 9", () => {
     game.command(host.room, host.session, "start", { force: true });
     game.startMatch(host.room);
     assert.equal(host.room.teams.length, teams);
-    assert.ok(host.room.teams.every(t => t.turn));
+    assert.ok(host.room.teams.every((t) => t.turn));
   }
   for (const teams of [0, 10, 1.5, "2"]) {
     assert.throws(() => new Game(bank).config({ ...config, teams }));
@@ -67,28 +67,52 @@ test("duplicate names are rejected across teams, offline players and Unicode spe
   const f = fixture();
   f.game.join(f.host.room.code, "Minh  Ánh", 0, 0);
   const size = f.host.room.players.length;
-  for (const name of ["MINH ÁNH", " minh ánh ", "Minh Ánh".normalize("NFD"), "Minh\u200b Ánh"]) {
+  for (const name of [
+    "MINH ÁNH",
+    " minh ánh ",
+    "Minh Ánh".normalize("NFD"),
+    "Minh\u200b Ánh",
+  ]) {
     assert.throws(() => f.game.join(f.host.room.code, name, 0, 1), /đã có/i);
   }
-  f.host.room.players.find(p => p.name === "Minh Ánh").connected = false;
-  assert.throws(() => f.game.join(f.host.room.code, "Minh Ánh", 0, 1), /đã có/i);
+  f.host.room.players.find((p) => p.name === "Minh Ánh").connected = false;
+  assert.throws(
+    () => f.game.join(f.host.room.code, "Minh Ánh", 0, 1),
+    /đã có/i,
+  );
   assert.equal(f.host.room.players.length, size);
   // Distinct Vietnamese letters remain distinct names.
   f.game.join(f.host.room.code, "Minh Anh", 0, 1);
 });
 
 test("host and player renames reject duplicates atomically but allow own name", () => {
-  const f = fixture(), p = f.host.room.players[0], original = { ...p };
-  assert.throws(() => f.game.command(f.host.room, f.host.session, "member", {
-    playerId: p.id, name: "BẠN 1", teamId: 2,
-  }), /đã có/i);
+  const f = fixture(),
+    p = f.host.room.players[0],
+    original = { ...p };
+  assert.throws(
+    () =>
+      f.game.command(f.host.room, f.host.session, "member", {
+        playerId: p.id,
+        name: "BẠN 1",
+        teamId: 2,
+      }),
+    /đã có/i,
+  );
   assert.deepEqual(p, original);
-  assert.throws(() => f.game.playerCommand(f.host.room, f.players[0].session, "profile", {
-    name: "Bạn 1", teamId: 2, avatar: 8,
-  }), /đã có/i);
+  assert.throws(
+    () =>
+      f.game.playerCommand(f.host.room, f.players[0].session, "profile", {
+        name: "Bạn 1",
+        teamId: 2,
+        avatar: 8,
+      }),
+    /đã có/i,
+  );
   assert.deepEqual(p, original);
   f.game.playerCommand(f.host.room, f.players[0].session, "profile", {
-    name: "BẠN 0", teamId: 0, avatar: 0,
+    name: "BẠN 0",
+    teamId: 0,
+    avatar: 0,
   });
   assert.equal(p.name, "BẠN 0");
 });

@@ -1,13 +1,16 @@
 // LOCAL QA ONLY. Isolated memory server bound to loopback; never used by npm start.
 const { createApp } = require("../server");
 const { Peer } = require("../test/helpers");
-const bank = require("../../questions");
+const bank = require("../src/questions");
 const app = createApp({
   hostKey: "local-browser-fixture-only",
   persist: false,
 });
 const filled = new Set(),
   bots = [];
+const playerCount = Number(process.env.QA_PLAYERS || 31);
+if (!Number.isInteger(playerCount) || playerCount < 1 || playerCount > 59)
+  throw new Error("QA_PLAYERS must be 1..59");
 app.server.listen(3101, "127.0.0.1", () =>
   console.log(
     "Isolated UI fixture: http://127.0.0.1:3101 — QA key: local-browser-fixture-only",
@@ -50,12 +53,12 @@ const timer = setInterval(async () => {
       "Anh Tú",
       "Thảo Nguyên",
     ];
-    for (let i = 0; i < 31; i++) {
+    for (let i = 0; i < playerCount; i++) {
       const peer = new Peer("ws://127.0.0.1:3101/ws");
       bots.push(peer);
       const result = await peer.call("join", {
         code: room.code,
-        name: names[i],
+        name: names[i] || `Bạn kiểm thử ${i + 1}`,
         avatar: i % 12,
         teamId: i % room.config.teams,
       });

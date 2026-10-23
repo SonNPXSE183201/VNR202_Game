@@ -1,5 +1,23 @@
 # Kiểm thử phiên bản sinh tồn — mỗi câu một lần gửi
 
+## Mới nhất: Dấu mốc độc lập / 1–9 đội / tên duy nhất (23/10/2026)
+
+Các bảng phía dưới là lịch sử phiên bản trước.
+
+- `npm run check`: PASS, 14 file JavaScript. Dự án không có build, TypeScript hoặc ESLint riêng.
+- `npm run test:coverage`: **22/22 PASS**. Engine 93,45% dòng / 85,46% nhánh; server 82,96% dòng / 70,87% nhánh. Tổng Node 93,03% dòng / 80,34% nhánh có tính cả dữ liệu câu; không phải coverage frontend.
+- Kiểm tra tạo/bắt đầu từng số đội 1–9 và từ chối cấu hình ngoài phạm vi. Chặn tên trùng khi tham gia và đổi tên, khác hoa/thường/khoảng trắng/Unicode/ký tự vô hình; giữ tên người offline. Đổi tên thất bại không đổi đội/avatar. Hai yêu cầu WebSocket cùng tên đồng thời chỉ một yêu cầu thành công.
+- Ngân hàng có 60 câu với trang nguồn. `/src/questions.js` trả 404, logo/ảnh trả 200. Snapshot khác phiên bản ngân hàng bị bỏ qua, file cũ không bị xóa trong kiểm thử.
+- Tải localhost 20x với kho mới: **25 client PASS**, 1.388 đúng/458 sai, RTT p95 9ms/max18ms; **50 client PASS**, 1.209 đúng/416 sai, RTT p95 14ms/max26ms. Đủ người nhận cập nhật; reconnect, quyền, gửi trùng, đối soát giây và trần trận đều PASS. Không phải đo Render/Wi-Fi thật.
+- `scripts/browser-flow.js`: PASS 32 người/8 đội, cấu hình/avatar/tên escape HTML/sai một lần/câu mới/pause/resume/reload/CSV/responsive; không page error.
+- `scripts/design-flow.js`, `QA_PLAYERS=49`: **PASS 50 người/9 đội**, dropdown đủ 1–9, cảnh báo tên trùng rồi cho tên khác, ảnh/logo tải được. Màn chiếu đủ 50 tên và 9 đội, vừa 1920×1080. Trang vào phòng không tràn ngang ở 320/390/768px; không page error.
+- Đã mở xem ảnh laptop/điện thoại/màn chiếu. Với 9 đội, màn chiếu bỏ thống kê phụ/thanh tiến độ, giữ toàn bộ tên/avatar/người giữ bom/đồng hồ. Tên dài hoặc đội không cân bằng có thể cần cuộn dọc; không ẩn thành viên.
+- `npm audit --omit=dev`: 0 lỗ hổng được báo. Diff không có `.env`. Rà soát template escape, không thêm eval/new Function hay log khóa host.
+
+QA mới: terminal 1 đặt `$env:QA_PLAYERS='49'` rồi `node scripts/ui-fixture.js`. Terminal 2 chạy `npx playwright-cli -s=design open http://127.0.0.1:3101` rồi `npx playwright-cli -s=design run-code --filename scripts/design-flow.js`. Chỉ dùng localhost, không chạy fixture trong buổi chơi.
+
+Ảnh `output/playwright/design-*.png`, coverage `output/redesign-coverage.txt` là artifact local được ignore. Sau thay kho phải tạo phòng mới và host duyệt câu trước buổi chơi; tham chiếu trang không phải chứng nhận thẩm định nội dung.
+
 Ngày: 23/10/2026, Asia/Saigon. Windows, Node.js 24.16.0, Chromium qua Playwright CLI. Kết quả thể thức 8 lượt/cộng điểm trước đây không áp dụng cho phiên bản này.
 
 ## Chức năng

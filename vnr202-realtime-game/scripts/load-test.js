@@ -5,7 +5,7 @@ const path = require("node:path");
 const assert = require("node:assert/strict");
 const { createApp } = require("../server");
 const { Peer, waitFor } = require("../test/helpers");
-const bank = require("../../questions");
+const bank = require("../src/questions");
 const percentile = (list, p) =>
   [...list].sort((a, b) => a - b)[
     Math.min(list.length - 1, Math.floor(list.length * p))

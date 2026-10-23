@@ -268,11 +268,21 @@ function shareBlock(s, compact = false) {
     : `<section class="panel"><h2>Mời cả lớp vào chơi</h2><div class="qr-block"><img src="/api/qr?value=${encodeURIComponent(url)}" alt="QR tham gia phòng"><div><small>Mã phòng</small><div class="room-code">${esc(s.code)}</div></div></div><p class="join-link">${esc(url)}</p><button class="secondary full" data-action="copy-join">Sao chép link tham gia</button><details class="share-address" data-keep="share"><summary>Địa chỉ cho điện thoại</summary><p class="fine">Điện thoại dùng cùng Wi-Fi. Không dùng localhost trên điện thoại. Chọn IP LAN của máy chủ hoặc tên miền đã cấu hình.</p><label>Địa chỉ máy chủ<input id="join-origin" type="url" value="${esc(joinBase)}"></label><button class="quiet full" data-action="apply-origin">Cập nhật QR</button><div id="network-options"></div></details><button class="quiet full" data-action="screen">Mở màn chiếu</button></section>`;
 }
 function configFields(prefix = "") {
-  return `<div class="field-pair"><label>Số đội<select id="${prefix}teams">${[7, 8].map((n) => `<option value="${n}" ${draft.teams === n ? "selected" : ""}>${n} đội</option>`).join("")}</select></label><label>Thời gian khởi đầu<select id="${prefix}duration">${[180, 210, 240, 270].map((n) => `<option value="${n}" ${draft.duration === n ? "selected" : ""}>${n} giây</option>`).join("")}</select></label><label>Giới hạn trận<select id="${prefix}matchLimit">${[300, 330, 360].map((n) => `<option value="${n}" ${draft.matchLimit === n ? "selected" : ""}>${n} giây</option>`).join("")}</select></label></div><p class="fine">Đúng ≤5s: +10s; ≤10s: +7s; chậm hơn: +4s. Sai −8s. Mỗi câu chỉ gửi một lần; đúng hoặc sai đều chuyển người và câu mới. Dự trữ tối đa thời gian đầu +60s.</p>`;
+  return `<div class="field-pair"><label>Số đội<select id="${prefix}teams">${Array.from(
+    { length: 9 },
+    (_, i) => i + 1,
+  )
+    .map(
+      (n) =>
+        `<option value="${n}" ${draft.teams === n ? "selected" : ""}>${n} đội</option>`,
+    )
+    .join(
+      "",
+    )}</select></label><label>Thời gian khởi đầu<select id="${prefix}duration">${[180, 210, 240, 270].map((n) => `<option value="${n}" ${draft.duration === n ? "selected" : ""}>${n} giây</option>`).join("")}</select></label><label>Giới hạn trận<select id="${prefix}matchLimit">${[300, 330, 360].map((n) => `<option value="${n}" ${draft.matchLimit === n ? "selected" : ""}>${n} giây</option>`).join("")}</select></label></div><p class="fine">Đúng ≤5s: +10s; ≤10s: +7s; chậm hơn: +4s. Sai −8s. Mỗi câu chỉ gửi một lần; đúng hoặc sai đều chuyển người và câu mới. Dự trữ tối đa thời gian đầu +60s.</p>`;
 }
 function catalogHTML() {
   if (!catalog) return '<p class="fine">Xác thực host để chọn bộ câu hỏi.</p>';
-  return `<h3>Bộ câu hỏi <span id="question-count" class="badge">${draft.questionIds.length}/60</span></h3><div class="catalog-toolbar"><button type="button" class="quiet" data-pick="all">Chọn tất cả</button><button type="button" class="quiet" data-pick="none">Bỏ chọn</button>${catalog.categories.map((c) => `<button type="button" class="quiet" data-pick="${esc(c.id)}">${esc(c.name)}</button>`).join("")}</div><div class="question-catalog">${catalog.questions.map((q) => `<div class="catalog-row"><label><input type="checkbox" data-qid="${q.id}" ${draft.questionIds.includes(q.id) ? "checked" : ""}><span><strong>Câu ${q.id}.</strong> ${esc(q.question)}</span></label><details><summary>Xem đáp án và giải thích</summary><p class="good">${esc(q.options[q.correct])}</p><p>${esc(q.explain)}</p></details></div>`).join("")}</div><label class="consent"><input id="reviewed" type="checkbox" ${draft.reviewed ? "checked" : ""} required><span>Tôi đã kiểm tra nội dung và cho phép dùng những câu đã chọn trong buổi chơi này. Việc chọn câu không thay thế thẩm định nguồn lịch sử.</span></label>`;
+  return `<p class="fine">Thuyết trình Nhóm 01 · Xây dựng và bảo vệ chính quyền cách mạng 1945–1946. Mỗi lời giải có trang PDF để đối chiếu.</p><h3>Bộ câu hỏi <span id="question-count" class="badge">${draft.questionIds.length}/60</span></h3><div class="catalog-toolbar"><button type="button" class="quiet" data-pick="all">Chọn tất cả</button><button type="button" class="quiet" data-pick="none">Bỏ chọn</button>${catalog.categories.map((c) => `<button type="button" class="quiet" data-pick="${esc(c.id)}">${esc(c.name)}</button>`).join("")}</div><div class="question-catalog">${catalog.questions.map((q) => `<div class="catalog-row"><label><input type="checkbox" data-qid="${q.id}" ${draft.questionIds.includes(q.id) ? "checked" : ""}><span><strong>Câu ${q.id}.</strong> ${esc(q.question)}</span></label><details><summary>Xem đáp án và giải thích</summary><p class="good">${esc(q.options[q.correct])}</p><p>${esc(q.explain)}</p></details></div>`).join("")}</div><label class="consent"><input id="reviewed" type="checkbox" ${draft.reviewed ? "checked" : ""} required><span>Tôi đã kiểm tra nội dung và cho phép dùng những câu đã chọn trong buổi chơi này. Việc chọn câu không thay thế thẩm định nguồn lịch sử.</span></label>`;
 }
 function avatarPicker() {
   return `<fieldset><legend>Avatar của bạn</legend><div class="avatar-picker">${avatars.map((a, i) => `<button type="button" class="avatar-choice" data-avatar-choice="${i}" aria-label="${esc(a.name)}" aria-pressed="${selectedAvatar === i}">${a.icon}</button>`).join("")}</div></fieldset>`;
@@ -280,14 +290,14 @@ function avatarPicker() {
 function entry() {
   const host = mode === "host";
   $("#main").innerHTML =
-    `<div class="entry"><section class="entry-story"><span class="pill">Một lớp học. Nhiều đồng đội.</span><h1>Giữ bình tĩnh.<br>Gỡ bom tri thức.</h1><p>Cùng nhóm ôn lại những dấu mốc 1945–1950. Mỗi câu đúng là một lần đưa cả đội tiến lên.</p><div class="story-steps"><span>💣 Khởi đầu ${draft.duration} giây</span><span>🤝 7–8 đội cùng chơi</span><span>🏆 Thi đấu 5–7 phút</span></div><div class="bomb-stage" aria-hidden="true"><div class="bomb"><span class="bomb-eyes"></span><span class="bomb-smile"></span></div><span class="orbit-label">Trả lời đúng, giữ bom lâu hơn!</span></div><details><summary>Cách chơi trong 30 giây</summary><p class="fine">Cả đội cùng xem câu hỏi, chỉ người giữ bom gửi đáp án. Đúng được cộng giây và chuyển người; sai bị trừ 8 giây. Mỗi câu chỉ gửi một lần; đúng hoặc sai đều chuyển người và câu mới. Hết giờ đội dừng chơi. Đội sống lâu hơn xếp trên.</p></details></section><section class="entry-panel"><nav class="mode-tabs" aria-label="Vai trò"><a href="/?room=${esc(params.get("room") || "")}" class="${host ? "" : "active"}">Tham gia chơi</a><a href="/?mode=host" class="${host ? "active" : ""}">Dành cho host</a></nav>${host ? hostEntry() : playerEntry()}</section>${host ? "" : '<section class="join-roster"><h2>Các đội trong phòng</h2><div id="entry-roster" class="mini-roster"><p class="fine">Nhập mã phòng để xem các đội và bạn cùng nhóm.</p></div></section>'}</div>`;
+    `<div class="entry"><section class="entry-story"><p class="course-context">Chương 2 · Xây dựng và bảo vệ chính quyền cách mạng</p><h1>Dấu mốc độc lập</h1><p class="period">1945–1946</p><p>Ôn lại những quyết sách trong những năm đầu độc lập. Cùng đội trả lời, chuyền lượt và giữ thời gian đến cuối trận.</p><figure class="archive-photo"><img src="/election-1946.jpg" width="850" height="555" alt="Khu vực bỏ phiếu trong ngày Tổng tuyển cử 6 tháng 1 năm 1946"><figcaption>Khu vực bỏ phiếu, Tổng tuyển cử 6/1/1946.<br>Ảnh tư liệu: <a href="https://nvsk.vnanet.vn/ngay-tong-tuyen-cu-bau-quoc-hoi-viet-nam-6-1-1946-1-138647.vna" target="_blank" rel="noopener noreferrer">Thông tấn xã Việt Nam</a>.</figcaption></figure><div class="session-facts"><span>1–9 đội</span><span>60 câu hỏi</span><span>5–7 phút</span></div><details><summary>Cách chơi</summary><p class="fine">Cả đội cùng xem câu hỏi, chỉ người giữ bom gửi đáp án. Đúng được cộng giây, sai bị trừ 8 giây. Mỗi câu chỉ gửi một lần, sau đó chuyển người và câu mới. Hết thời gian đội dừng chơi; đội chơi lâu hơn xếp trên. Với 1 đội, dùng chế độ này để luyện tập.</p></details></section><section class="entry-panel"><nav class="mode-tabs" aria-label="Vai trò"><a href="/?room=${esc(params.get("room") || "")}" class="${host ? "" : "active"}">Tham gia chơi</a><a href="/?mode=host" class="${host ? "active" : ""}">Dành cho host</a></nav>${host ? hostEntry() : playerEntry()}</section>${host ? "" : '<section class="join-roster"><h2>Các đội trong phòng</h2><div id="entry-roster" class="mini-roster"><p class="fine">Nhập mã phòng để xem các đội và bạn cùng nhóm.</p></div></section>'}</div>`;
   bindEntry();
 }
 function playerEntry() {
-  return `<h2>Vào đội của bạn</h2><p class="fine">Không cần tài khoản. Chọn nhóm bạn đang ngồi cùng.</p><form id="join-form" class="form-stack"><div class="field-pair"><label>Mã phòng<input id="room-code" name="room" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" value="${esc(params.get("room") || "")}" placeholder="6 chữ số" required autocomplete="off"></label><label>Tên của bạn<input id="player-name" name="name" minlength="2" maxlength="30" placeholder="Ví dụ: Minh Anh" required autocomplete="nickname"></label></div>${avatarPicker()}<label>Đội tham gia<select id="join-team" required><option value="">Nhập mã phòng trước</option></select></label><div class="personal-preview" id="personal-preview">${avatar(selectedAvatar, true)}<div><strong>Tên của bạn</strong><small>Chưa chọn đội</small></div></div><label class="consent"><input id="consent" type="checkbox" required><span>Tôi đồng ý hiển thị tên/avatar/đội trên máy chiếu và lưu log chơi, kết nối, tín hiệu rời trang trong phiên này. Dữ liệu được lưu tối đa 7 ngày; không thu camera hoặc lịch sử duyệt web.</span></label><button type="submit" id="join-submit">Tham gia đội</button><p id="join-error" class="error-inline" role="alert"></p></form>`;
+  return `<h2>Vào đội của bạn</h2><p class="fine">Không cần tài khoản. Chọn nhóm bạn đang ngồi cùng.</p><form id="join-form" class="form-stack"><div class="field-pair"><label>Mã phòng<input id="room-code" name="room" inputmode="numeric" pattern="[0-9]{6}" maxlength="6" minlength="6" value="${esc(params.get("room") || "")}" placeholder="6 chữ số" required autocomplete="off"></label><label>Tên của bạn<input id="player-name" name="name" minlength="2" maxlength="30" placeholder="Tên hoặc tên + mã sinh viên" aria-describedby="name-hint" required autocomplete="nickname"></label></div><p class="fine" id="name-hint">Tên phải duy nhất trong phòng. Nếu đã có, hãy thêm mã sinh viên.</p>${avatarPicker()}<label>Đội tham gia<select id="join-team" required><option value="">Nhập mã phòng trước</option></select></label><div class="personal-preview" id="personal-preview">${avatar(selectedAvatar, true)}<div><strong>Tên của bạn</strong><small>Chưa chọn đội</small></div></div><label class="consent"><input id="consent" type="checkbox" required><span>Tôi đồng ý hiển thị tên/avatar/đội trên máy chiếu và lưu log chơi, kết nối, tín hiệu rời trang trong phiên này. Dữ liệu được lưu tối đa 7 ngày; không thu camera hoặc lịch sử duyệt web.</span></label><button type="submit" id="join-submit">Tham gia đội</button><p id="join-error" class="error-inline" role="alert"></p></form>`;
 }
 function hostEntry() {
-  return `<h2>Tạo sân chơi cho lớp</h2><p class="fine">Khóa host nằm trong file .env trên máy chủ. Không chia sẻ khóa này với người chơi.</p><form id="host-auth" class="form-stack"><label>Tên host<input id="host-name" minlength="2" maxlength="30" placeholder="Nhóm thuyết trình" required></label><label>Khóa host<input id="host-key" type="password" required autocomplete="current-password" minlength="16"></label><button type="submit">Mở cấu hình phòng</button><p id="host-error" class="error-inline" role="alert"></p></form><div id="create-config" hidden><h3>Thiết lập trận</h3><div class="form-stack">${configFields("create-")}<div id="create-catalog"></div><button id="create-room">Tạo phòng</button><p id="create-error" class="error-inline" role="alert"></p></div></div>`;
+  return `<h2>Tạo phòng học tập</h2><p class="fine">Nhập khóa quản lý để cấu hình trận và bộ câu hỏi.</p><form id="host-auth" class="form-stack"><label>Tên host<input id="host-name" autocomplete="username" minlength="2" maxlength="30" placeholder="Nhóm thuyết trình" required></label><label>Khóa host<input id="host-key" type="password" required autocomplete="current-password" minlength="16"></label><button type="submit">Mở cấu hình phòng</button><p id="host-error" class="error-inline" role="alert"></p></form><div id="create-config" hidden><h3>Thiết lập trận</h3><div class="form-stack">${configFields("create-")}<div id="create-catalog"></div><button id="create-room">Tạo phòng</button><p id="create-error" class="error-inline" role="alert"></p></div>`;
 }
 function bindCatalog() {
   document.querySelectorAll("[data-qid]").forEach(
@@ -417,6 +427,31 @@ function updatePersonal() {
   if ($("#personal-preview"))
     $("#personal-preview").innerHTML =
       `${avatar(selectedAvatar, true)}<div><strong>${esc(name)}</strong><small>${esc(selected)}</small></div>`;
+  const input = $("#player-name");
+  if (input) {
+    const key = (value) =>
+      value
+        .normalize("NFC")
+        .replace(/[\u0000-\u001f\u007f\p{Cf}]/gu, "")
+        .trim()
+        .replace(/\s+/gu, " ")
+        .toLocaleLowerCase("vi");
+    const duplicate = preview?.players.some(
+      (p) => key(p.name) === key(input.value),
+    );
+    input.setCustomValidity(
+      duplicate
+        ? "Tên này đã có trong phòng. Hãy thêm mã sinh viên hoặc chọn tên khác."
+        : "",
+    );
+    input.setAttribute("aria-invalid", String(Boolean(duplicate)));
+    if ($("#name-hint")) {
+      $("#name-hint").textContent = duplicate
+        ? input.validationMessage
+        : "Tên phải duy nhất trong phòng. Nếu đã có, hãy thêm mã sinh viên.";
+      $("#name-hint").classList.toggle("bad", Boolean(duplicate));
+    }
+  }
 }
 function loadPreview() {
   const code = $("#room-code")?.value;
@@ -507,7 +542,7 @@ function render() {
 function renderScreen() {
   const s = state;
   preserveRender(
-    `<div class="screen">${shareBlock(s, true)}<div class="stage-heading"><div><h1>${phaseLabel(s)}</h1><p>${s.phase === "lobby" ? "Tìm avatar và tên của bạn trong đúng đội. Sẵn sàng rồi cùng bắt đầu!" : s.phase === "finished" ? "Cảm ơn cả lớp đã cùng ôn tập VNR202." : "Cùng đội suy nghĩ. Đến lượt ai, người đó trả lời."}</p></div><button class="quiet" data-action="fullscreen">Toàn màn hình</button></div>${s.phase === "finished" ? podium(s) : ""}<div class="teams-grid">${s.teams.map((t) => teamCard(t, s)).join("")}</div>${s.phase === "finished" ? leaderboard(s) : ""}</div>`,
+    `<div class="screen">${shareBlock(s, true)}<div class="stage-heading"><div><h1>${phaseLabel(s)}</h1><p>${s.phase === "lobby" ? "Tìm avatar và tên của bạn trong đúng đội. Sẵn sàng rồi cùng bắt đầu!" : s.phase === "finished" ? "Cảm ơn cả lớp đã cùng ôn tập VNR202." : "Cùng đội suy nghĩ. Đến lượt ai, người đó trả lời."}</p></div><button class="quiet" data-action="fullscreen">Toàn màn hình</button></div>${s.phase === "finished" ? podium(s) : ""}<div class="teams-grid" data-count="${s.teams.length}">${s.teams.map((t) => teamCard(t, s)).join("")}</div>${s.phase === "finished" ? leaderboard(s) : ""}</div>`,
   );
   bindActions();
 }
@@ -526,7 +561,7 @@ function renderHost() {
       ? '<section id="room-config" class="panel host-config"></section>'
       : "";
   preserveRender(
-    `<div class="workspace"><aside class="sidebar">${shareBlock(s)}<section class="panel"><h2>Điều khiển trận</h2><p class="fine">${esc(s.hostName)} · ${s.config.questionCount} câu đã chọn<br>Khởi đầu ${s.config.duration}s · giới hạn ${s.config.matchLimit}s</p>${hostControls(s)}${host && s.phase === "finished" ? '<button class="secondary full" data-action="new-room">Tạo phòng mới</button>' : ""}${host ? '<hr><button class="quiet full" data-action="observer">Mời host giám sát</button>' : ""}<button class="quiet full" data-action="leave">Rời giao diện</button></section></aside><div class="stage"><div class="stage-heading"><div><h1>${phaseLabel(s)}</h1><p>${s.players.length} người · ${s.players.filter((p) => p.ready).length} sẵn sàng · ${s.teams.length} đội</p></div>${timerBlock(s)}</div>${s.teams.some((t) => !s.players.some((p) => p.teamId === t.id && p.connected)) && s.phase === "lobby" ? '<p class="notice warning">Mỗi đội cần ít nhất một người kết nối. Kiểm tra nhóm trống trước khi bắt đầu.</p>' : ""}${s.phase === "finished" ? podium(s) : ""}<div class="teams-grid">${s.teams.map((t) => teamCard(t, s, true)).join("")}</div>${configHTML}${host && s.phase === "lobby" ? memberEditor(s) : ""}${logPanel(s)}${s.phase === "finished" ? review(s) : ""}</div></div>`,
+    `<div class="workspace"><aside class="sidebar">${shareBlock(s)}<section class="panel"><h2>Điều khiển trận</h2><p class="fine">${esc(s.hostName)} · ${s.config.questionCount} câu đã chọn<br>Khởi đầu ${s.config.duration}s · giới hạn ${s.config.matchLimit}s</p>${hostControls(s)}${host && s.phase === "finished" ? '<button class="secondary full" data-action="new-room">Tạo phòng mới</button>' : ""}${host ? '<hr><button class="quiet full" data-action="observer">Mời host giám sát</button>' : ""}<button class="quiet full" data-action="leave">Rời giao diện</button></section></aside><div class="stage"><div class="stage-heading"><div><h1>${phaseLabel(s)}</h1><p>${s.players.length} người · ${s.players.filter((p) => p.ready).length} sẵn sàng · ${s.teams.length} đội</p></div>${timerBlock(s)}</div>${s.teams.some((t) => !s.players.some((p) => p.teamId === t.id && p.connected)) && s.phase === "lobby" ? '<p class="notice warning">Mỗi đội cần ít nhất một người kết nối. Kiểm tra nhóm trống trước khi bắt đầu.</p>' : ""}${s.phase === "finished" ? podium(s) : ""}<div class="teams-grid" data-count="${s.teams.length}">${s.teams.map((t) => teamCard(t, s, true)).join("")}</div>${configHTML}${host && s.phase === "lobby" ? memberEditor(s) : ""}${logPanel(s)}${s.phase === "finished" ? review(s) : ""}</div></div>`,
   );
   if (configNode && $("#room-config"))
     $("#room-config").replaceWith(configNode);

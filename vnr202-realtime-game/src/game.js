@@ -35,11 +35,12 @@ const newTeam = (i) => ({
   feedback: null,
 });
 const categories = [
-  { id: "after", name: "Sau ngày độc lập", from: 1, to: 12 },
-  { id: "build", name: "Xây dựng chính quyền", from: 13, to: 26 },
-  { id: "protect", name: "Bảo vệ nền độc lập", from: 27, to: 46 },
-  { id: "resist", name: "Toàn quốc kháng chiến", from: 47, to: 53 },
-  { id: "develop", name: "Những bước phát triển", from: 54, to: 60 },
+  { id: "context", name: "Bối cảnh sau độc lập", from: 1, to: 10 },
+  { id: "tasks", name: "Nhiệm vụ cấp bách", from: 11, to: 20 },
+  { id: "government", name: "Xây dựng chính quyền", from: 21, to: 30 },
+  { id: "protect", name: "Bảo vệ chính quyền", from: 31, to: 40 },
+  { id: "diplomacy", name: "Sách lược ngoại giao", from: 41, to: 50 },
+  { id: "lessons", name: "Chuẩn bị và kinh nghiệm", from: 51, to: 60 },
 ];
 
 class Game {
@@ -48,6 +49,7 @@ class Game {
     { now = Date.now, random = Math.random, changed = () => {} } = {},
   ) {
     this.bank = new Map(bank.map((q) => [q.id, q]));
+    this.bankVersion = bank.version;
     this.now = now;
     this.random = random;
     this.changed = changed;
@@ -63,7 +65,9 @@ class Game {
   }
   config(input) {
     if (
-      !Number.isInteger(input.teams) || input.teams < 1 || input.teams > 9 ||
+      !Number.isInteger(input.teams) ||
+      input.teams < 1 ||
+      input.teams > 9 ||
       ![180, 210, 240, 270].includes(input.duration) ||
       ![300, 330, 360].includes(input.matchLimit) ||
       input.duration >= input.matchLimit
@@ -112,6 +116,7 @@ class Game {
     const session = { token: token(), role: "host" };
     const room = {
       schema: 2,
+      bankVersion: this.bankVersion,
       code,
       hostName: text(name),
       config,
@@ -146,8 +151,15 @@ class Game {
   playerName(room, value, exceptId = null) {
     const name = text(value);
     const key = name.toLocaleLowerCase("vi");
-    if (room.players.some(p => p.id !== exceptId && text(p.name).toLocaleLowerCase("vi") === key))
-      fail("Tên này đã có trong phòng. Vui lòng chọn tên khác hoặc thêm mã sinh viên.");
+    if (
+      room.players.some(
+        (p) =>
+          p.id !== exceptId && text(p.name).toLocaleLowerCase("vi") === key,
+      )
+    )
+      fail(
+        "Tên này đã có trong phòng. Vui lòng chọn tên khác hoặc thêm mã sinh viên.",
+      );
     return name;
   }
   join(code, name, avatar, teamId) {

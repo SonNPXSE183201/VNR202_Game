@@ -1,10 +1,11 @@
-# Ôm bom tri thức VNR202 — sinh tồn theo đội
+# Dấu mốc độc lập · VNR202 — sinh tồn theo đội
 
 Bản hiện tại thay thế hoàn toàn luật 8 lượt bom và cộng điểm trước đây. Mỗi đội có một đồng hồ riêng, **đúng cộng giây, sai trừ giây, sống lâu hơn xếp trên**. Mỗi câu chỉ gửi **một đáp án duy nhất**.
 
 ## 1. Luật mặc định
 
-- Khoảng 30–50 người, chia 7–8 đội theo nhóm đang ngồi. Mỗi người nhập tên, chọn avatar hoạt hình và chọn đội, không cần tài khoản.
+- Khoảng 30–50 người, host chọn **1–9 đội** theo nhóm đang ngồi (1 đội để luyện tập). Mỗi người nhập tên duy nhất trong phòng, chọn avatar hoạt hình và chọn đội, không cần tài khoản.
+- Tên trùng bị từ chối, không tự thêm hậu tố. So sánh không phân biệt hoa/thường, chuẩn hóa Unicode và khoảng trắng; tên của người mất mạng vẫn được giữ. Áp dụng khi vào phòng và khi người chơi/host đổi tên. Có thể thêm mã sinh viên để phân biệt.
 - Tất cả đội bắt đầu cùng lúc với **240 giây (4 phút)**. Đây là thời gian khởi đầu cố định và bằng nhau, không phải hạn nổ bất biến.
 - Cả đội cùng thấy câu hỏi; chỉ người được hệ thống chọn giữ bom có quyền gửi. Đồng đội được góp ý trực tiếp.
 - Người chơi chọn phương án rồi bấm Trả lời. Trước khi gửi được sửa lựa chọn để tránh chạm nhầm; **sau khi máy chủ nhận thì không được đổi hoặc thử lại**.
@@ -48,7 +49,7 @@ Bộ số này khuyến khích đúng nhanh để tích lũy, trả lời chậm
 
 Khung tổ chức: hướng dẫn khoảng 30–40 giây + thi đấu tối đa 5 phút 30 giây + trao giải khoảng 30 giây = **khoảng 6 phút 30–40 giây**. Quét QR và chia đội trước khi bấm bắt đầu. Nếu tất cả đội trả lời sai nhiều và nổ sớm, trận có thể ngắn hơn 5 phút; không hồi sinh hoặc kéo dài giả tạo. Tạm dừng vì sự cố cũng có thể làm thời gian thực tế dài hơn lịch.
 
-Host cấu hình trước trận: **7/8 đội**, thời gian đầu **180/210/240/270 giây**, giới hạn chung **300/330/360 giây**; thời gian đầu phải nhỏ hơn giới hạn. Khuyến nghị giữ mặc định 240/330 cho buổi 5–7 phút. Thưởng/phạt 10/7/4/−8 cố định để dễ giải thích, không tùy chỉnh giữa trận.
+Host cấu hình trước trận: **1–9 đội**, thời gian đầu **180/210/240/270 giây**, giới hạn chung **300/330/360 giây**; thời gian đầu phải nhỏ hơn giới hạn. Khuyến nghị giữ mặc định 240/330 cho buổi 5–7 phút. Thưởng/phạt 10/7/4/−8 cố định để dễ giải thích, không tùy chỉnh giữa trận.
 
 ## 4. Giao diện
 
@@ -87,7 +88,9 @@ Host cấu hình trước trận: **7/8 đội**, thời gian đầu **180/210/2
 
 ## 6. Câu hỏi và công bằng
 
-Nguồn: `../questions.js` (60 câu) và nội dung thuyết trình ở thư mục cha. Giữ nguyên các file đó và trò chơi cũ.
+Ngân hàng **`src/questions.js`** gồm 60 câu được biên soạn theo PDF thuyết trình Nhóm 01 trong thư mục này, phạm vi **1945–1946**. Mỗi câu có tham chiếu trang PDF trong metadata và lời giải. Kho `../questions.js` được giữ nguyên cho game cũ, không còn dùng cho bản mới. Xem [CONTENT.md](CONTENT.md) về phạm vi, chi tiết cần đối chiếu và nguồn ảnh tư liệu.
+
+Tên mới **Dấu mốc độc lập · VNR202**, logo sách và mốc đánh dấu, giao diện đỏ trầm/xanh đậm. Ảnh Tổng tuyển cử 1946 có nguồn TTXVN, giữ nguyên watermark; không tạo ảnh AI lãnh tụ/sự kiện. Sau cập nhật ngân hàng phải tạo phòng mới; snapshot khác phiên bản câu bị bỏ qua để không lẫn ID câu.
 
 - Chỉ dùng câu người phụ trách đã duyệt; cần nguồn giáo trình/tài liệu, trang/mục, người duyệt và ngày duyệt. Checkbox host không phải thẩm định lịch sử tự động.
 - Không tạo câu/trích dẫn/bằng chứng giả; không xuyên tạc lịch sử, bôi nhọ lãnh tụ, kích động thù hằn hoặc suy diễn ngoại giao hiện nay. Bom/avatar là hình hoạt hình trung tính, không mô phỏng thương vong.

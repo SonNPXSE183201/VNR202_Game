@@ -6,7 +6,7 @@ const { randomBytes, createHash, timingSafeEqual } = require("node:crypto");
 const { WebSocketServer, WebSocket } = require("ws");
 const QRCode = require("qrcode");
 const { Game, categories } = require("./src/game");
-const bank = require("../questions");
+const bank = require("./src/questions");
 
 function createApp({
   hostKey = process.env.HOST_KEY,
@@ -60,7 +60,8 @@ function createApp({
           !room.code ||
           !room.config ||
           !Array.isArray(room.sessions) ||
-          room.schema !== 2
+          room.schema !== 2 ||
+          room.bankVersion !== bank.version
         )
           continue;
         room.players.forEach((p) => (p.connected = false));
@@ -90,6 +91,8 @@ function createApp({
     "/style.css": ["public/style.css", "text/css; charset=utf-8"],
     "/avatars.js": ["public/avatars.js", "text/javascript; charset=utf-8"],
     "/favicon.svg": ["public/favicon.svg", "image/svg+xml"],
+    "/logo.svg": ["public/logo.svg", "image/svg+xml"],
+    "/election-1946.jpg": ["public/election-1946.jpg", "image/jpeg"],
   };
   const server = http.createServer(async (req, res) => {
     res.setHeader("X-Content-Type-Options", "nosniff");

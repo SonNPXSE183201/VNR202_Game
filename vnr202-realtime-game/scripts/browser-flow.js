@@ -96,7 +96,7 @@ async (page) => {
   const oldQuestion = await player.locator(".question-panel").innerText();
   await player
     .getByRole("button")
-    .filter({ hasText: "Nước sôi lửa bỏng" })
+    .filter({ hasText: "Không còn bất kỳ khó khăn kinh tế nào" })
     .click();
   await player.getByRole("button", { name: "Trả lời", exact: true }).click();
   await player
@@ -123,7 +123,7 @@ async (page) => {
     .waitFor({ timeout: 16000 });
   await player
     .getByRole("button")
-    .filter({ hasText: "Ngàn cân treo sợi tóc" })
+    .filter({ hasText: "Trở thành người làm chủ đất nước" })
     .click();
   await player.getByRole("button", { name: "Trả lời", exact: true }).click();
   await player

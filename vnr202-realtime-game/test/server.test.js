@@ -4,7 +4,7 @@ const { randomBytes } = require("node:crypto");
 const { WebSocket } = require("ws");
 const { createApp } = require("../server");
 const { Peer, waitFor } = require("./helpers");
-const bank = require("../../questions");
+const bank = require("../src/questions");
 const fs = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
@@ -79,6 +79,8 @@ test("HTTP serves only public assets and rejects cross-origin WebSockets", async
     "/style.css",
     "/avatars.js",
     "/favicon.svg",
+    "/logo.svg",
+    "/election-1946.jpg",
     "/api/network",
     "/api/health",
     "/api/qr?value=http%3A%2F%2Flocalhost%2F",
@@ -86,6 +88,7 @@ test("HTTP serves only public assets and rejects cross-origin WebSockets", async
     assert.equal((await fetch(base + url)).status, 200);
   for (const url of [
     "/questions.js",
+    "/src/questions.js",
     "/../questions.js",
     "/.env",
     "/data/123456.json",
@@ -125,6 +128,9 @@ test("real sockets: permissions, idempotency, reconnect, privacy, observer and c
   await assert.rejects(host.call("catalog", { hostKey: "incorrect" }));
   const catalog = await host.call("catalog", { hostKey });
   assert.equal(catalog.questions.length, 60);
+  assert.ok(
+    catalog.questions.every((q) => q.source?.page >= 3 && q.source.page <= 33),
+  );
   const created = await host.call("create", {
     hostKey,
     name: "Host kiểm thử",
@@ -203,6 +209,53 @@ test("real sockets: permissions, idempotency, reconnect, privacy, observer and c
   assert.equal(app.game.room(created.code).phase, "lobby");
 });
 
+test("concurrent duplicate joins allow only one name and renames enforce the same rule", async (t) => {
+  const hostKey = randomBytes(24).toString("hex"),
+    app = createApp({ hostKey, persist: false });
+  await new Promise((resolve) => app.server.listen(0, "127.0.0.1", resolve));
+  t.after(() => app.close());
+  const url = `ws://127.0.0.1:${app.server.address().port}/ws`;
+  const [host, a, b] = Array.from({ length: 3 }, () => new Peer(url));
+  t.after(() => [host, a, b].forEach((p) => p.close()));
+  const room = await host.call("create", {
+    hostKey,
+    name: "Host",
+    config: { ...config, teams: 9 },
+  });
+  const joined = await Promise.allSettled([
+    a.call("join", { code: room.code, name: "Minh Anh", teamId: 0, avatar: 0 }),
+    b.call("join", {
+      code: room.code,
+      name: "  MINH   ANH ",
+      teamId: 8,
+      avatar: 1,
+    }),
+  ]);
+  assert.equal(joined.filter((r) => r.status === "fulfilled").length, 1);
+  const rejected = joined.find((r) => r.status === "rejected");
+  assert.match(rejected.reason.message, /đã có/i);
+  const loser = joined[0].status === "rejected" ? a : b;
+  const second = await loser.call("join", {
+    code: room.code,
+    name: "Khánh An",
+    teamId: 8,
+    avatar: 1,
+  });
+  await assert.rejects(
+    loser.call("profile", { name: "minh anh", teamId: 7, avatar: 4 }),
+    /đã có/i,
+  );
+  await assert.rejects(
+    host.call("member", {
+      playerId: second.state.me.id,
+      name: "minh anh",
+      teamId: 0,
+    }),
+    /đã có/i,
+  );
+  assert.equal(app.game.room(room.code).players.length, 2);
+});
+
 test("snapshots recover players and cancel active survival match safely on restart", async (t) => {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), "vnr-game-"));
   const hostKey = randomBytes(24).toString("hex");
@@ -230,4 +283,22 @@ test("snapshots recover players and cancel active survival match safely on resta
     app.game.resume(recovered.code, result.session.token).session.role,
     "host",
   );
+});
+
+test("snapshots from a different question bank are not reinterpreted", async (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), "vnr-bank-"));
+  const hostKey = randomBytes(24).toString("hex");
+  const app = createApp({ hostKey, dataDir: dir });
+  const { room } = app.game.create("Host", config);
+  room.bankVersion = "previous-question-bank";
+  app.game.save(room);
+  await app.close();
+  const restored = createApp({ hostKey, dataDir: dir });
+  t.after(async () => {
+    await restored.close();
+    for (const file of fs.readdirSync(dir)) fs.unlinkSync(path.join(dir, file));
+    fs.rmdirSync(dir);
+  });
+  assert.equal(restored.game.rooms.size, 0);
+  assert.ok(fs.existsSync(path.join(dir, `${room.code}.json`)));
 });
