@@ -20,7 +20,7 @@ Chủ động không sử dụng số liệu nạn đói, tỷ lệ mù chữ, c
 ## Ảnh và logo
 
 - Ảnh thật ở trang vào phòng: **Khu vực bỏ phiếu trong ngày Tổng tuyển cử 6/1/1946**, ảnh tư liệu TTXVN. Nguồn: [Nhân vật – Sự kiện, Thông tấn xã Việt Nam](https://nvsk.vnanet.vn/ngay-tong-tuyen-cu-bau-quoc-hoi-viet-nam-6-1-1946-1-138647.vna). Tệp gốc: [45-17-22-54.jpg](https://imgnvsk.vnanet.vn/mediaupload/content/2024/01/05/45-17-22-54.jpg). Bản tải giữ nguyên nội dung và watermark, không tô màu, phục dựng hay tạo nhân vật bằng AI. Chú thích và liên kết nguồn có ngay bên dưới ảnh trong ứng dụng. Quyền ảnh thuộc chủ sở hữu nguồn; không gán giấy phép mở.
-- `public/logo.svg` và favicon là biểu tượng vector sách mở và mốc đánh dấu, tự thiết kế bằng SVG. Không phải ảnh lãnh tụ, tư liệu lịch sử hay huy hiệu chính thức của cơ quan nào.
+- `public/logo.svg` và favicon là biểu tượng vector sách mở và dải đánh dấu trang màu vàng, tự thiết kế bằng SVG. Không phải ảnh lãnh tụ, tư liệu lịch sử hay huy hiệu chính thức của cơ quan nào.
 - Avatar hoạt hình trung tính chỉ đại diện người chơi; không nhập vai nhân vật lịch sử.
 
 Khi cập nhật từ kho cũ, tạo phòng mới. Máy chủ bỏ qua snapshot khác phiên bản ngân hàng để không diễn giải ID câu cũ thành câu mới; không xóa file snapshot cũ.

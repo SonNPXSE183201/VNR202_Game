@@ -6,7 +6,7 @@ Palette: nền xám sáng `#f5f6f8`, mực xanh đậm `#203549`, đỏ trầm c
 
 Typography: Segoe UI/Tahoma/Arial hỗ trợ tiếng Việt, không tải font ngoài. Tiêu đề gọn, không dùng font tương phản để trang trí. Đồng hồ dùng tabular-nums. Nội dung câu hỏi từ 18px, đoạn văn không quá 72ch. Khoảng cách theo nhịp 4/8px, nút tối thiểu 44px.
 
-Trang vào phòng: laptop chia phần giới thiệu/tư liệu và form; điện thoại đưa form lên trước. Bỏ bom hoạt hình lớn, slogan, nhãn nổi và hiệu ứng lặp. Logo SVG sách mở và mốc đánh dấu thể hiện học tập lịch sử; không phải huy hiệu cơ quan. Ảnh TTXVN nguyên bản có chú thích và nguồn; không phủ chữ hoặc cắt watermark, không tạo ảnh AI nhân vật/sự kiện. Xem `CONTENT.md`.
+Trang vào phòng: laptop chia phần giới thiệu/tư liệu và form; điện thoại đưa form lên trước. Bỏ bom hoạt hình lớn, slogan, nhãn nổi và hiệu ứng lặp. Logo SVG sách mở và dải đánh dấu trang màu vàng thể hiện học tập lịch sử; không phải huy hiệu cơ quan. Ảnh TTXVN nguyên bản có chú thích và nguồn; không phủ chữ hoặc cắt watermark, không tạo ảnh AI nhân vật/sự kiện. Xem `CONTENT.md`.
 
 Host có sidebar điều khiển và log riêng. Màn chiếu chỉ có dữ liệu công khai. Lưới thích nghi số đội: 1/2/3 cột với 1/2/3 đội; 4 cột với 4–8 đội; 3×3 với 9 đội ở màn rộng. Với 9 đội, bỏ thanh trang trí và thống kê phụ trên màn chiếu, giữ đồng hồ, người giữ bom và toàn bộ tên/avatar. Thống kê chi tiết vẫn ở host. Điện thoại xuống 2 hoặc 1 cột và cho cuộn dọc.
 
