@@ -10,7 +10,7 @@ Trang vào phòng: laptop chia phần giới thiệu/tư liệu và form; điệ
 
 Host có sidebar điều khiển và log riêng. Màn chiếu chỉ có dữ liệu công khai. Lưới thích nghi số đội: 1/2/3 cột với 1/2/3 đội; 4 cột với 4–8 đội; 3×3 với 9 đội ở màn rộng. Với 9 đội, bỏ thanh trang trí và thống kê phụ trên màn chiếu, giữ đồng hồ, người giữ bom và toàn bộ tên/avatar. Thống kê chi tiết vẫn ở host. Điện thoại xuống 2 hoặc 1 cột và cho cuộn dọc.
 
-Dropdown dùng select gốc để giữ bàn phím, trình đọc màn hình và bộ chọn điện thoại. Mũi tên SVG nhỏ, padding phải rõ, trạng thái focus/disabled thống nhất; forced-colors dùng lại mũi tên hệ điều hành. Không tự dựng menu bằng div.
+Dropdown dùng select gốc để giữ bàn phím, trình đọc màn hình và xác thực form. Trình duyệt hỗ trợ `appearance: base-select` có danh sách `::picker(select)` cùng nền trắng, bo góc 12px, bóng nhẹ, mục cao tối thiểu 44px, màu đỏ trầm và dấu chọn. Danh sách dài cuộn trong khung tối đa 340px/60dvh, không bị cắt bởi panel. Trình duyệt chưa hỗ trợ giữ bộ chọn gốc và kiểu ô chọn có mũi tên SVG. Forced-colors trở về giao diện hệ điều hành. Không tự dựng menu bằng div. Tham khảo [MDN Customizable select](https://developer.mozilla.org/en-US/docs/Learn_web_development/Extensions/Forms/Customizable_select).
 
 Tên trùng được cảnh báo ngay khi danh sách đã tải, rồi kiểm tra lại trên máy chủ. Chuẩn hóa Unicode NFC, bỏ ký tự vô hình, gộp khoảng trắng, không phân biệt hoa/thường. Giữ dấu tiếng Việt để An và Ân vẫn khác nhau. Người mất mạng vẫn giữ tên để kết nối lại. Đổi sang tên người khác bị từ chối mà không thay đổi đội/avatar.
 
